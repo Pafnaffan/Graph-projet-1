@@ -1,14 +1,16 @@
 package m1graphs2025;
 
+import javax.naming.Name;
 import java.util.List;
 
 public class Node implements Comparable<Node> {
+
     private int id;
     private Graph graph;
     private String name;
 
     /**
-     * Constructor that create this Node without name
+     * Constructor that create this Node
      * @param id the id of this Node
      * @param graph the graph holder of this Node
      */
@@ -18,7 +20,7 @@ public class Node implements Comparable<Node> {
     }
 
     /**
-     * Constructor that create this Node with name
+     * Constructor that create this Node with a name
      * @param id the id of this Node
      * @param graph the graph holder of this Node
      * @param name the name of this Node
@@ -46,10 +48,19 @@ public class Node implements Comparable<Node> {
     }
 
     /**
+     * Method that return the name of this Node
+     * @return the name of this Node
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * Method that return a list of this Node's neighbours without duplicates
      * @return list of this Node's neighbours
      */
     public List<Node> getSuccessors(){
+        //todo
         return null;
     }
 
@@ -58,6 +69,7 @@ public class Node implements Comparable<Node> {
      * @return list of this Node's neighbours
      */
     public List<Node> getSuccessorsMulti(){
+        //todo
         return null;
     }
 
@@ -67,6 +79,7 @@ public class Node implements Comparable<Node> {
      * @return true if the Node u is adjacent to this Node, otherwise false
      */
     public boolean adjacent(Node u){
+        //todo
         return false;
     }
 
@@ -76,6 +89,7 @@ public class Node implements Comparable<Node> {
      * @return true if the Node with the id u_id is adjacent to this Node, otherwise false
      */
     public boolean adjacent(int u_id){
+        //todo
         return false;
     }
 
@@ -84,6 +98,7 @@ public class Node implements Comparable<Node> {
      * @return the in-degree of this Node
      */
     public int inDegree(){
+        //todo
         return 0;
     }
 
@@ -92,6 +107,7 @@ public class Node implements Comparable<Node> {
      * @return the out-degree of this Node
      */
     public int outDegree(){
+        //todo
         return 0;
     }
 
@@ -100,6 +116,7 @@ public class Node implements Comparable<Node> {
      * @return the degree of this Node
      */
     public int degree(){
+        //todo
         return 0;
     }
 
@@ -108,6 +125,7 @@ public class Node implements Comparable<Node> {
      * @return list of all edges leaving this Node
      */
     public List<Edge> getOutEdges(){
+        //todo
         return null;
     }
 
@@ -116,6 +134,7 @@ public class Node implements Comparable<Node> {
      * @return list of all edges entering this Node
      */
     public List<Edge> getInEdges(){
+        //todo
         return null;
     }
 
@@ -124,6 +143,7 @@ public class Node implements Comparable<Node> {
      * @return list of all edges incident to this Node
      */
     public List<Edge> getIncidentEdges(){
+        //todo
         return null;
     }
 
@@ -133,12 +153,9 @@ public class Node implements Comparable<Node> {
      * @return list of all edges going from this Node to Node u
      */
     public List<Edge> getEdgesTo(Node u){
+        //todo
         return null;
     }
-
-
-
-
 
 
     @Override
