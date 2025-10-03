@@ -1,5 +1,7 @@
 package m1graphs2025;
 
+import java.util.Objects;
+
 public class Edge implements Comparable<Edge> {
 
     private Node from;
@@ -46,9 +48,13 @@ public class Edge implements Comparable<Edge> {
      * Constructor that create this Edge with the ids of the Nodes
      * @param from id of the starting Node of this Edge
      * @param to id of the ending Node of this Edge
+     * @param g the Graph of the Nodes
      */
-    public Edge(int from, int to){
-        //todo
+    public Edge(int from, int to, Graph g){
+        Node nfrom = g.getNode(from);
+        Node nto = g.getNode(to);
+        this.from = nfrom;
+        this.to = nto;
     }
 
     /**
@@ -56,9 +62,14 @@ public class Edge implements Comparable<Edge> {
      * @param from id of the starting Node of this Edge
      * @param to id of the ending Node of this Edge
      * @param weight the weight of this Edge
+     * @param g the Graph of the Nodes
      */
-    public Edge(int from, int to, Integer weight){
-        //todo
+    public Edge(int from, int to, Integer weight, Graph g){
+        Node nfrom = g.getNode(from);
+        Node nto = g.getNode(to);
+        this.from = nfrom;
+        this.to = nto;
+        this.weight = weight;
     }
 
     /**
@@ -82,8 +93,7 @@ public class Edge implements Comparable<Edge> {
      * @return the symmetric of this Edge
      */
     public Edge getSymmetric(){
-        //todo
-        return null;
+        return new Edge(this.to,this.from,this.weight);
     }
 
     /**
@@ -91,8 +101,7 @@ public class Edge implements Comparable<Edge> {
      * @return true if this Edge is a self-loop, otherwise false
      */
     public boolean isSelfLoop(){
-        //todo
-        return false;
+        return this.from == this.to;
     }
 
     /**
@@ -123,6 +132,15 @@ public class Edge implements Comparable<Edge> {
 
     @Override
     public boolean equals(Object o){
+        if(o == null){
+            return false;
+        }
+        Edge e = (Edge)o;
+        if(this.from == e.from()){
+            if(this.to == e.to()){
+                return Objects.equals(this.weight, e.weight);
+            }
+        }
         return false;
     }
 
@@ -132,6 +150,22 @@ public class Edge implements Comparable<Edge> {
     }
 
     public int compareTo(Edge o) {
-        return 0;
+        if(this.from.compareTo(o.from()) < 0){
+            return -1;
+        }
+        else if(this.from.compareTo(o.from()) > 0){
+            return 1;
+        }
+        else {
+            if(this.to.compareTo(o.to()) < 0){
+                return -1;
+            }
+            else if(this.to.compareTo(o.to()) > 0){
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
     }
 }

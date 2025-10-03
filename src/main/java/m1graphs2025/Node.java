@@ -60,8 +60,7 @@ public class Node implements Comparable<Node> {
      * @return list of this Node's neighbours
      */
     public List<Node> getSuccessors(){
-        //todo
-        return null;
+        return graph.getSuccessors(this);
     }
 
     /**
@@ -69,8 +68,7 @@ public class Node implements Comparable<Node> {
      * @return list of this Node's neighbours
      */
     public List<Node> getSuccessorsMulti(){
-        //todo
-        return null;
+        return graph.getSuccessorsMulti(this);
     }
 
     /**
@@ -79,8 +77,7 @@ public class Node implements Comparable<Node> {
      * @return true if the Node u is adjacent to this Node, otherwise false
      */
     public boolean adjacent(Node u){
-        //todo
-        return false;
+        return graph.adjacent(this,u);
     }
 
     /**
@@ -89,8 +86,7 @@ public class Node implements Comparable<Node> {
      * @return true if the Node with the id u_id is adjacent to this Node, otherwise false
      */
     public boolean adjacent(int u_id){
-        //todo
-        return false;
+        return graph.adjacent(this.id,u_id);
     }
 
     /**
@@ -98,8 +94,7 @@ public class Node implements Comparable<Node> {
      * @return the in-degree of this Node
      */
     public int inDegree(){
-        //todo
-        return 0;
+        return graph.inDegree(this);
     }
 
     /**
@@ -107,8 +102,7 @@ public class Node implements Comparable<Node> {
      * @return the out-degree of this Node
      */
     public int outDegree(){
-        //todo
-        return 0;
+        return graph.outDegree(this);
     }
 
     /**
@@ -116,8 +110,7 @@ public class Node implements Comparable<Node> {
      * @return the degree of this Node
      */
     public int degree(){
-        //todo
-        return 0;
+        return graph.degree(this);
     }
 
     /**
@@ -125,8 +118,7 @@ public class Node implements Comparable<Node> {
      * @return list of all edges leaving this Node
      */
     public List<Edge> getOutEdges(){
-        //todo
-        return null;
+        return graph.getOutEdges(this);
     }
 
     /**
@@ -134,8 +126,7 @@ public class Node implements Comparable<Node> {
      * @return list of all edges entering this Node
      */
     public List<Edge> getInEdges(){
-        //todo
-        return null;
+        return graph.getInEdges(this);
     }
 
     /**
@@ -143,8 +134,7 @@ public class Node implements Comparable<Node> {
      * @return list of all edges incident to this Node
      */
     public List<Edge> getIncidentEdges(){
-        //todo
-        return null;
+        return graph.getIncidentEdges(this);
     }
 
     /**
@@ -153,8 +143,7 @@ public class Node implements Comparable<Node> {
      * @return list of all edges going from this Node to Node u
      */
     public List<Edge> getEdgesTo(Node u){
-        //todo
-        return null;
+        return graph.getEdges(this,u);
     }
 
 
