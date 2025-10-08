@@ -1,9 +1,6 @@
 package m1graphs2025;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Graph {
 
@@ -12,13 +9,16 @@ public class Graph {
     /**
      * Constructor that create this empty Graph
      */
-    public Graph(){}
+    public Graph(){
+        adjEdList = new HashMap<>();
+    }
 
     /**
      * Constructor that create this Graph with a successor array to initialize
      * @param sa the successor array in unspecified number of integers
      */
     public Graph(int... sa){
+        adjEdList = new HashMap<>();
         if(sa.length > 0){
             int i_node = 1;
             Node from = new Node(i_node, this);
@@ -45,6 +45,7 @@ public class Graph {
      * @param sa the successor array in integers array
      */
     public Graph(List<Integer> sa){
+        adjEdList = new HashMap<>();
         if(!sa.isEmpty()) {
             int i_node = 1;
             Node from = new Node(i_node, this);
@@ -66,6 +67,13 @@ public class Graph {
         }
     }
 
+    /**
+     *
+     * @param file
+     */
+    public Graph(String file){
+        adjEdList = new HashMap<>();
+    }
 
     /**
      * Method that return the number of Nodes in this Graph
@@ -108,8 +116,8 @@ public class Graph {
      * @return the Node held by this Graph with the id, otherwise null
      */
     public Node getNode(int id){
-        for(Node n : adjEdList.keySet()){
-            if(n.getId() == id){
+        for (Node n : adjEdList.keySet()) {
+            if (n.getId() == id) {
                 return n;
             }
         }
@@ -178,7 +186,7 @@ public class Graph {
      * @return a List of all the Nodes of this Graph
      */
     public List<Node> getAllNodes(){
-        return adjEdList.keySet().stream().toList();
+        return new ArrayList<>(adjEdList.keySet());
     }
 
     /**
@@ -186,10 +194,10 @@ public class Graph {
      * @return the largest id used by a Node of this Graph
      */
     public int largestNodeId(){
-        List<Node> node_list = adjEdList.keySet().stream().toList();
+        ArrayList<Node> node_list = new ArrayList<>(adjEdList.keySet());
         int res = -1;
         if(!node_list.isEmpty()){
-            res = node_list.getFirst().getId();
+            res = node_list.get(0).getId();
         }
         for(int i = 1; i<node_list.size(); i++){
             if(node_list.get(i).getId() > res){
@@ -204,10 +212,10 @@ public class Graph {
      * @return the smallest id used by a Node of this Graph
      */
     public int smallestNodeId(){
-        List<Node> node_list = adjEdList.keySet().stream().toList();
+        ArrayList<Node> node_list = new ArrayList<>(adjEdList.keySet());
         int res = -1;
         if(!node_list.isEmpty()){
-            res = node_list.getFirst().getId();
+            res = node_list.get(0).getId();
         }
         for(int i = 1; i<node_list.size(); i++){
             if(node_list.get(i).getId() < res){

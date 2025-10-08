@@ -162,14 +162,6 @@ public class Node implements Comparable<Node> {
     }
 
     public int compareTo(Node o) {
-        if (this.id > o.getId()){
-            return 1;
-        }
-        else if(this.id == o.getId()){
-            return 0;
-        }
-        else{
-            return -1;
-        }
+       return this.id - o.getId();
     }
 }
