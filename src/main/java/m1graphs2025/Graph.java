@@ -1,5 +1,7 @@
 package m1graphs2025;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -17,19 +19,25 @@ public class Graph {
      * @param sa the successor array in unspecified number of integers
      */
     public Graph(int... sa){
-        /**
-        int i = 1;
-        for(int x : sa){
-            Node from = new Node(i,this);
+        if(sa.length > 0){
+            int i_node = 1;
+            Node from = new Node(i_node, this);
             addNode(from);
-            if(x == 0){
-                i++;
-            }
-            else {
-
+            for (int i = 0; i < sa.length; i++) {
+                if (sa[i] == 0 && i < sa.length - 1) {
+                    i_node++;
+                    from = new Node(i_node, this);
+                    addNode(from);
+                } else if (sa[i] != 0) {
+                    Node to = getNode(sa[i]);
+                    if (to == null) {
+                        to = new Node(sa[i], this);
+                        addNode(to);
+                    }
+                    addEdge(from, to);
+                }
             }
         }
-         */
     }
 
     /**
@@ -37,7 +45,25 @@ public class Graph {
      * @param sa the successor array in integers array
      */
     public Graph(List<Integer> sa){
-        //todo
+        if(!sa.isEmpty()) {
+            int i_node = 1;
+            Node from = new Node(i_node, this);
+            addNode(from);
+            for (int i = 0; i < sa.size(); i++) {
+                if (sa.get(i) == 0 && i < sa.size() - 1) {
+                    i_node++;
+                    from = new Node(i_node, this);
+                    addNode(from);
+                } else if (sa.get(i) != 0) {
+                    Node to = getNode(sa.get(i));
+                    if (to == null) {
+                        to = new Node(sa.get(i), this);
+
+                    }
+                    addEdge(from, to);
+                }
+            }
+        }
     }
 
 
@@ -82,7 +108,11 @@ public class Graph {
      * @return the Node held by this Graph with the id, otherwise null
      */
     public Node getNode(int id){
-        //todo
+        for(Node n : adjEdList.keySet()){
+            if(n.getId() == id){
+                return n;
+            }
+        }
         return null;
     }
 
@@ -92,8 +122,11 @@ public class Graph {
      * @return true if the Node has been added, otherwise false
      */
     public boolean addNode(Node n){
-        //todo
-        return false;
+        if(n == null || n.getGraph() != this || getNode(n.getId()) != null){
+            return false;
+        }
+        adjEdList.put(n,new ArrayList<>());
+        return true;
     }
 
     /**
@@ -102,8 +135,11 @@ public class Graph {
      * @return true if the Node has been added, otherwise false
      */
     public boolean addNode(int n){
-        //todo
-        return false;
+        if(n < 1 || getNode(n) != null){
+            return false;
+        }
+        adjEdList.put(new Node(n,this),new ArrayList<>());
+        return true;
     }
 
     /**
@@ -112,7 +148,14 @@ public class Graph {
      * @return true if the Node has been removed, otherwise false
      */
     public boolean removeNode(Node n){
-        //todo
+        if(n == null){
+            return false;
+        }
+        Node n_remove = getNode(n.getId());
+        if(n_remove == null){
+            return false;
+        }
+        adjEdList.remove(n_remove);
         return false;
     }
 
@@ -122,7 +165,11 @@ public class Graph {
      * @return true if the Node has been removed, otherwise false
      */
     public boolean removeNode(int n){
-        //todo
+        Node n_remove = getNode(n);
+        if(n_remove == null){
+            return false;
+        }
+        adjEdList.remove(n_remove);
         return false;
     }
 
@@ -131,8 +178,7 @@ public class Graph {
      * @return a List of all the Nodes of this Graph
      */
     public List<Node> getAllNodes(){
-        //todo
-        return null;
+        return adjEdList.keySet().stream().toList();
     }
 
     /**
@@ -140,8 +186,17 @@ public class Graph {
      * @return the largest id used by a Node of this Graph
      */
     public int largestNodeId(){
-        //todo
-        return -1;
+        List<Node> node_list = adjEdList.keySet().stream().toList();
+        int res = -1;
+        if(!node_list.isEmpty()){
+            res = node_list.getFirst().getId();
+        }
+        for(int i = 1; i<node_list.size(); i++){
+            if(node_list.get(i).getId() > res){
+                res = node_list.get(i).getId();
+            }
+        }
+        return res;
     }
 
     /**
@@ -149,8 +204,17 @@ public class Graph {
      * @return the smallest id used by a Node of this Graph
      */
     public int smallestNodeId(){
-        //todo
-        return -1;
+        List<Node> node_list = adjEdList.keySet().stream().toList();
+        int res = -1;
+        if(!node_list.isEmpty()){
+            res = node_list.getFirst().getId();
+        }
+        for(int i = 1; i<node_list.size(); i++){
+            if(node_list.get(i).getId() < res){
+                res = node_list.get(i).getId();
+            }
+        }
+        return res;
     }
 
     /**
@@ -159,8 +223,14 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph
      */
     public List<Node> getSuccessors(Node n){
-        //todo
-        return null;
+        List<Edge> edges = adjEdList.get(n);
+        List<Node> successors = new ArrayList<>();
+        for(Edge e : edges){
+            if(!successors.contains(e.to())){
+                successors.add(e.to());
+            }
+        }
+        return successors;
     }
 
     /**
@@ -169,8 +239,14 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph without duplicates
      */
     public List<Node> getSuccessors(int n){
-        //todo
-        return null;
+        List<Edge> edges = adjEdList.get(getNode(n));
+        List<Node> successors = new ArrayList<>();
+        for(Edge e : edges){
+            if(!successors.contains(e.to())){
+                successors.add(e.to());
+            }
+        }
+        return successors;
     }
 
     /**
@@ -179,8 +255,12 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph with possible duplicates
      */
     public List<Node> getSuccessorsMulti(Node n){
-        //todo
-        return null;
+        List<Edge> edges = adjEdList.get(n);
+        List<Node> successors = new ArrayList<>();
+        for(Edge e : edges){
+            successors.add(e.to());
+        }
+        return successors;
     }
 
     /**
@@ -189,8 +269,12 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph with possible duplicates
      */
     public List<Node> getSuccessorsMulti(int n){
-        //todo
-        return null;
+        List<Edge> edges = adjEdList.get(getNode(n));
+        List<Node> successors = new ArrayList<>();
+        for(Edge e : edges){
+            successors.add(e.to());
+        }
+        return successors;
     }
 
     /**
