@@ -109,8 +109,7 @@ public class Edge implements Comparable<Edge> {
      * @return true if this Edge is a multi-edge, otherwise false
      */
     public boolean isMultiEdge(){
-        //todo
-        return false;
+        return from.getGraph().isMultiEdge(this);
     }
 
     /**

@@ -1,24 +1,24 @@
 package m1graphs2025;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
 public class Graph {
 
-    private Map<Node, List<Edge>> adjEdList;
+    private Map<Node, List<Edge>> adjEdList = new HashMap<>();
 
     /**
      * Constructor that create this empty Graph
      */
-    public Graph(){
-        adjEdList = new HashMap<>();
-    }
+    public Graph(){}
 
     /**
      * Constructor that create this Graph with a successor array to initialize
      * @param sa the successor array in unspecified number of integers
      */
     public Graph(int... sa){
-        adjEdList = new HashMap<>();
         if(sa.length > 0){
             int i_node = 1;
             Node from = new Node(i_node, this);
@@ -26,8 +26,11 @@ public class Graph {
             for (int i = 0; i < sa.length; i++) {
                 if (sa[i] == 0 && i < sa.length - 1) {
                     i_node++;
-                    from = new Node(i_node, this);
-                    addNode(from);
+                    from = getNode(i_node);
+                    if(from == null) {
+                        from = new Node(i_node, this);
+                        addNode(from);
+                    }
                 } else if (sa[i] != 0) {
                     Node to = getNode(sa[i]);
                     if (to == null) {
@@ -45,7 +48,6 @@ public class Graph {
      * @param sa the successor array in integers array
      */
     public Graph(List<Integer> sa){
-        adjEdList = new HashMap<>();
         if(!sa.isEmpty()) {
             int i_node = 1;
             Node from = new Node(i_node, this);
@@ -59,7 +61,7 @@ public class Graph {
                     Node to = getNode(sa.get(i));
                     if (to == null) {
                         to = new Node(sa.get(i), this);
-
+                        addNode(to);
                     }
                     addEdge(from, to);
                 }
@@ -68,11 +70,52 @@ public class Graph {
     }
 
     /**
-     *
-     * @param file
+     * Constructor that create this Graph with a DOT file
+     * @param file the path of the DOT file
      */
     public Graph(String file){
-        adjEdList = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String ligne;
+            while ((ligne = br.readLine()) != null) {
+                if (ligne.contains("->")) {
+                    Scanner sc = new Scanner(ligne);
+                    int i = 0;
+                    Node from = null;
+                    Node to = null;
+                    Integer weight = null;
+                    while (sc.hasNext()) {
+                        if (sc.hasNextInt()) {
+                            int x = sc.nextInt();
+                            if(i == 0){
+                                from = getNode(x);
+                                if(from == null){
+                                    from = new Node(x,this);
+                                    addNode(from);
+                                }
+                            }
+                            else if(i == 1) {
+                                to = getNode(x);
+                                if(to == null){
+                                    to = new Node(x,this);
+                                    addNode(to);
+                                }
+                            }
+                            else if(i == 2) {
+                                weight = x;
+                            }
+                        }
+                        else {
+                            addEdge(from,to,weight);
+                            sc.next();
+                        }
+                        i++;
+                    }
+                    sc.close();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -89,7 +132,10 @@ public class Graph {
      * @return true if the id of the Node n is already used by another Node in this Graph, otherwise false
      */
     public boolean usesNode(Node n){
-        return adjEdList.containsKey(n);
+        if(n != null && holdsNode(n)){
+            return adjEdList.containsKey(n);
+        }
+        return false;
     }
 
     /**
@@ -98,7 +144,7 @@ public class Graph {
      * @return true if the id of the Node n is already used by another Node in this Graph, otherwise false
      */
     public boolean usesNode(int n){
-        return adjEdList.containsKey(getNode(n));
+        return usesNode(getNode(n));
     }
 
     /**
@@ -107,7 +153,10 @@ public class Graph {
      * @return true if the Node n is a Node of this Graph, otherwise false
      */
     public boolean holdsNode(Node n){
-        return n.getGraph() == this;
+        if(n != null){
+            return n.getGraph() == this;
+        }
+        return false;
     }
 
     /**
@@ -143,11 +192,7 @@ public class Graph {
      * @return true if the Node has been added, otherwise false
      */
     public boolean addNode(int n){
-        if(n < 1 || getNode(n) != null){
-            return false;
-        }
-        adjEdList.put(new Node(n,this),new ArrayList<>());
-        return true;
+        return addNode(getNode(n));
     }
 
     /**
@@ -173,12 +218,7 @@ public class Graph {
      * @return true if the Node has been removed, otherwise false
      */
     public boolean removeNode(int n){
-        Node n_remove = getNode(n);
-        if(n_remove == null){
-            return false;
-        }
-        adjEdList.remove(n_remove);
-        return false;
+        return removeNode(getNode(n));
     }
 
     /**
@@ -231,14 +271,17 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph
      */
     public List<Node> getSuccessors(Node n){
-        List<Edge> edges = adjEdList.get(n);
-        List<Node> successors = new ArrayList<>();
-        for(Edge e : edges){
-            if(!successors.contains(e.to())){
-                successors.add(e.to());
+        if(holdsNode(n)) {
+            List<Edge> edges = adjEdList.get(n);
+            List<Node> successors = new ArrayList<>();
+            for (Edge e : edges) {
+                if (!successors.contains(e.to())) {
+                    successors.add(e.to());
+                }
             }
+            return successors;
         }
-        return successors;
+        return null;
     }
 
     /**
@@ -247,14 +290,7 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph without duplicates
      */
     public List<Node> getSuccessors(int n){
-        List<Edge> edges = adjEdList.get(getNode(n));
-        List<Node> successors = new ArrayList<>();
-        for(Edge e : edges){
-            if(!successors.contains(e.to())){
-                successors.add(e.to());
-            }
-        }
-        return successors;
+        return getSuccessors(getNode(n));
     }
 
     /**
@@ -263,12 +299,15 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph with possible duplicates
      */
     public List<Node> getSuccessorsMulti(Node n){
-        List<Edge> edges = adjEdList.get(n);
-        List<Node> successors = new ArrayList<>();
-        for(Edge e : edges){
-            successors.add(e.to());
+        if(holdsNode(n)) {
+            List<Edge> edges = adjEdList.get(n);
+            List<Node> successors = new ArrayList<>();
+            for (Edge e : edges) {
+                successors.add(e.to());
+            }
+            return successors;
         }
-        return successors;
+        return null;
     }
 
     /**
@@ -277,12 +316,7 @@ public class Graph {
      * @return a List of the successors of the Node n in this Graph with possible duplicates
      */
     public List<Node> getSuccessorsMulti(int n){
-        List<Edge> edges = adjEdList.get(getNode(n));
-        List<Node> successors = new ArrayList<>();
-        for(Edge e : edges){
-            successors.add(e.to());
-        }
-        return successors;
+        return getSuccessorsMulti(getNode(n));
     }
 
     /**
@@ -292,7 +326,19 @@ public class Graph {
      * @return true if the Nodes u and v are adjacent in this Graph, otherwise false
      */
     public boolean adjacent(Node u, Node v){
-        //todo
+        if(holdsNode(u) && holdsNode(v)) {
+            for (Edge e : adjEdList.get(u)) {
+                if (e.to() == v) {
+                    return true;
+                }
+            }
+            for (Edge e : adjEdList.get(v)) {
+                if (e.to() == u) {
+                    return true;
+                }
+            }
+            return false;
+        }
         return false;
     }
 
@@ -303,8 +349,7 @@ public class Graph {
      * @return true if the Nodes u and v are adjacent in this Graph, otherwise false
      */
     public boolean adjacent(int u, int v){
-        //todo
-        return false;
+        return adjacent(getNode(u),getNode(v));
     }
 
     /**
@@ -312,8 +357,20 @@ public class Graph {
      * @param n the Node to test
      * @return the in-degree of the Node n
      */
-    public int inDegree(Node n){
-        //todo
+    public int inDegree(Node n) {
+        if(holdsNode(n)) {
+            int in_degree = 0;
+            for (Node m : getAllNodes()) {
+                if (m != n) {
+                    for (Edge e : adjEdList.get(m)) {
+                        if (e.to() == n) {
+                            in_degree++;
+                        }
+                    }
+                }
+            }
+            return in_degree;
+        }
         return -1;
     }
 
@@ -323,8 +380,7 @@ public class Graph {
      * @return the in-degree of the Node n
      */
     public int inDegree(int n){
-        //todo
-        return -1;
+        return inDegree(getNode(n));
     }
 
     /**
@@ -333,7 +389,9 @@ public class Graph {
      * @return the out-degree of the Node n
      */
     public int outDegree(Node n){
-        //todo
+        if(holdsNode(n)){
+            return adjEdList.get(n).size();
+        }
         return -1;
     }
 
@@ -343,8 +401,7 @@ public class Graph {
      * @return the out-degree of the Node n
      */
     public int outDegree(int n){
-        //todo
-        return -1;
+        return outDegree(getNode(n));
     }
 
     /**
@@ -353,7 +410,9 @@ public class Graph {
      * @return the degree of the Node n
      */
     public int degree(Node n){
-        //todo
+        if(holdsNode(n)){
+            return inDegree(n) + outDegree(n);
+        }
         return -1;
     }
 
@@ -363,8 +422,7 @@ public class Graph {
      * @return the degree of the Node n
      */
     public int degree(int n){
-        //todo
-        return -1;
+        return degree(getNode(n));
     }
 
     /**
@@ -372,8 +430,11 @@ public class Graph {
      * @return the number of Edges of this Graph
      */
     public int nbEdges(){
-        //todo
-        return -1;
+        int number = 0;
+        for(Node n : getAllNodes()){
+            number += adjEdList.get(n).size();
+        }
+        return number;
     }
 
     /**
@@ -383,8 +444,7 @@ public class Graph {
      * @return true if an Edge exists between the Nodes u and v in this Graph, false otherwise
      */
     public boolean existsEdge(Node u, Node v){
-        //todo
-        return false;
+        return adjacent(u,v);
     }
 
     /**
@@ -394,8 +454,7 @@ public class Graph {
      * @return true if an Edge exists between the Nodes u and v in this Graph, false otherwise
      */
     public boolean existsEdge(int u, int v){
-        //todo
-        return false;
+        return adjacent(u,v);
     }
 
     /**
@@ -404,30 +463,45 @@ public class Graph {
      * @return true if the Edge e exist in this Graph, false otherwise
      */
     public boolean existsEdge(Edge e){
-        //todo
+        if(e != null && holdsNode(e.from())){
+            for(Edge f : getAllEdges()){
+                if(f == e){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
     /**
      * Method that return true if there is at least one other Edge from u to v in this Graph, false otherwise
-     * @param u the first Node to test
-     * @param v the second Node to test
+     * @param u the Node from of the Edge to test
+     * @param v the Node to of the Edge to test
      * @return true if there is at least one other Edge from u to v in this Graph, false otherwise
      */
     public boolean isMultiEdge(Node u, Node v){
-        //todo
+        if(holdsNode(u) && holdsNode(v)){
+            int num = 0;
+            for(Edge e : getOutEdges(u)){
+                if(e.to() == v){
+                    num++;
+                }
+                if(num > 1){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
     /**
      * Method that return true if there is at least one other Edge from u to v in this Graph, false otherwise
-     * @param u the id of the first Node to test
-     * @param v the id of the second Node to test
+     * @param u the Node from of the Edge to test
+     * @param v the Node to of the Edge to test
      * @return true if there is at least one other Edge from u to v in this Graph, false otherwise
      */
     public boolean isMultiEdge(int u, int v){
-        //todo
-        return false;
+        return isMultiEdge(getNode(u),getNode(v));
     }
 
     /**
@@ -436,8 +510,7 @@ public class Graph {
      * @return true if there is at least one other Edge like the Edge e in this Graph, false otherwise
      */
     public boolean isMultiEdge(Edge e){
-        //todo
-        return false;
+        return isMultiEdge(e.from(),e.to());
     }
 
     /**
@@ -446,7 +519,11 @@ public class Graph {
      * @param to the Node where the Edge end
      */
     public void addEdge(Node from, Node to){
-        //todo
+        if(holdsNode(from) && holdsNode(to)){
+            if(holdsNode(from) && holdsNode(to)){
+                adjEdList.get(from).add(new Edge(from,to));
+            }
+        }
     }
 
     /**
@@ -456,7 +533,16 @@ public class Graph {
      * @param weight the weight of the Edge
      */
     public void addEdge(Node from, Node to, Integer weight){
-        //todo
+        if(holdsNode(from) && holdsNode(to)){
+            if(weight == null){
+                addEdge(from,to);
+            }
+            else {
+                if(holdsNode(from) && holdsNode(to)){
+                    adjEdList.get(from).add(new Edge(from,to,weight));
+                }
+            }
+        }
     }
 
     /**
@@ -465,7 +551,7 @@ public class Graph {
      * @param to the id of the Node where the Edge end
      */
     public void addEdge(int from, int to){
-        //todo
+        addEdge(getNode(from),getNode(to));
     }
 
     /**
@@ -475,7 +561,7 @@ public class Graph {
      * @param weight the weight of the Edge
      */
     public void addEdge(int from, int to, Integer weight){
-        //todo
+        addEdge(getNode(from),getNode(to),weight);
     }
 
     /**
@@ -483,7 +569,9 @@ public class Graph {
      * @param e the Edge to add
      */
     public void addEdge(Edge e){
-        //todo
+        if(e != null && holdsNode(e.from())){
+            adjEdList.get(e.from()).add(e);
+        }
     }
 
     /**
@@ -493,7 +581,13 @@ public class Graph {
      * @return true if the remove succeeded, otherwise false
      */
     public boolean removeEdge(Node from, Node to){
-        //todo
+        if(holdsNode(from) && holdsNode(to)){
+            List<Edge> e_remove = getEdges(from,to);
+            for(Edge e : e_remove){
+                adjEdList.get(from).remove(e);
+            }
+            return true;
+        }
         return false;
     }
 
@@ -516,8 +610,7 @@ public class Graph {
      * @return true if the remove succeeded, otherwise false
      */
     public boolean removeEdge(int from, int to){
-        //todo
-        return false;
+        return removeEdge(getNode(from),getNode(to));
     }
 
     /**
@@ -528,8 +621,7 @@ public class Graph {
      * @return true if the remove succeeded, otherwise false
      */
     public boolean removeEdge(int from, int to, Integer weight){
-        //todo
-        return false;
+        return removeEdge(getNode(from),getNode(to),weight);
     }
 
     /**
