@@ -358,20 +358,7 @@ public class Graph {
      * @return the in-degree of the Node n
      */
     public int inDegree(Node n) {
-        if(holdsNode(n)) {
-            int in_degree = 0;
-            for (Node m : getAllNodes()) {
-                if (m != n) {
-                    for (Edge e : adjEdList.get(m)) {
-                        if (e.to() == n) {
-                            in_degree++;
-                        }
-                    }
-                }
-            }
-            return in_degree;
-        }
-        return -1;
+        return getInEdges(n).size();
     }
 
     /**
@@ -389,10 +376,7 @@ public class Graph {
      * @return the out-degree of the Node n
      */
     public int outDegree(Node n){
-        if(holdsNode(n)){
-            return adjEdList.get(n).size();
-        }
-        return -1;
+        return getOutEdges(n).size();
     }
 
     /**
@@ -575,16 +559,20 @@ public class Graph {
     }
 
     /**
-     * Method that remove an Edge who start with the Node from and end with the Node to in this Graph
-     * @param from the start Node of the Edge to remove
-     * @param to the end Node of the Edge to remove
+     * Method that remove all Edges who start with the Node from and end with the Node to in this Graph
+     * @param from the start Node of the Edges to remove
+     * @param to the end Node of the Edges to remove
      * @return true if the remove succeeded, otherwise false
      */
     public boolean removeEdge(Node from, Node to){
         if(holdsNode(from) && holdsNode(to)){
             List<Edge> e_remove = getEdges(from,to);
+            boolean res = false;
             for(Edge e : e_remove){
-                adjEdList.get(from).remove(e);
+                res = adjEdList.get(from).remove(e);
+                if(!res){
+                    return false;
+                }
             }
             return true;
         }
@@ -592,14 +580,26 @@ public class Graph {
     }
 
     /**
-     * Method that remove an Edge who start with the Node from and end with the Node to in this Graph
-     * @param from the start Node of the Edge to remove
-     * @param to the end Node of the Edge to remove
-     * @param weight the weight of the Edge to remove
+     * Method that remove all Edges who start with the Node from and end with the Node to with the weight in parameter in this Graph
+     * @param from the start Node of the Edges to remove
+     * @param to the end Node of the Edges to remove
+     * @param weight the weight of the Edges to remove
      * @return true if the remove succeeded, otherwise false
      */
     public boolean removeEdge(Node from, Node to, Integer weight){
-        //todo
+        if(holdsNode(from) && holdsNode(to)){
+            List<Edge> e_remove = getEdges(from,to);
+            boolean res = false;
+            for(Edge e : e_remove){
+                if(Objects.equals(e.getWeight(), weight)){
+                    res = adjEdList.get(from).remove(e);
+                    if(!res){
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
         return false;
     }
 
@@ -630,7 +630,14 @@ public class Graph {
      * @return true if the remove succeeded, otherwise false
      */
     public boolean removeEdge(Edge e){
-        //todo
+        if(e != null && holdsNode(e.from())){
+            if(e.getWeight() != null){
+                return removeEdge(e.from(),e.to(),e.getWeight());
+            }
+            else {
+                return removeEdge(e.from(), e.to());
+            }
+        }
         return false;
     }
 
@@ -640,7 +647,9 @@ public class Graph {
      * @return a List of all Edges leaving the Node n
      */
     public List<Edge> getOutEdges(Node n){
-        //todo
+        if(holdsNode(n)){
+            return adjEdList.get(n);
+        }
         return null;
     }
 
@@ -650,8 +659,7 @@ public class Graph {
      * @return a List of all Edges leaving the Node n
      */
     public List<Edge> getOutEdges(int n){
-        //todo
-        return null;
+        return getOutEdges(getNode(n));
     }
 
     /**
@@ -660,7 +668,19 @@ public class Graph {
      * @return a List of all Edges entering the Node n
      */
     public List<Edge> getInEdges(Node n){
-        //todo
+        if(holdsNode(n)) {
+            List<Edge> inEdges = new ArrayList<>();
+            for (Node m : getAllNodes()) {
+                if (m != n) {
+                    for (Edge e : adjEdList.get(m)) {
+                        if (e.to() == n) {
+                            inEdges.add(e);
+                        }
+                    }
+                }
+            }
+            return inEdges;
+        }
         return null;
     }
 
@@ -670,8 +690,7 @@ public class Graph {
      * @return a List of all Edges entering the Node n
      */
     public List<Edge> getInEdges(int n){
-        //todo
-        return null;
+        return getInEdges(getNode(n));
     }
 
     /**
@@ -680,7 +699,15 @@ public class Graph {
      * @return a List of all Edges incident to the Node n, union of in and out Edges
      */
     public List<Edge> getIncidentEdges(Node n){
-        //todo
+        if(holdsNode(n)){
+            List<Edge> incidentEdges = new ArrayList<>(getOutEdges(n));
+            for(Edge e : getInEdges(n)){
+                if(!incidentEdges.contains(e)){
+                    incidentEdges.add(e);
+                }
+            }
+            return incidentEdges;
+        }
         return null;
     }
 
@@ -690,8 +717,7 @@ public class Graph {
      * @return a List of all Edges incident to the Node n, union of in and out Edges
      */
     public List<Edge> getIncidentEdges(int n){
-        //todo
-        return null;
+        return getIncidentEdges(getNode(n));
     }
 
     /**
@@ -712,8 +738,7 @@ public class Graph {
      * @return a List of all the Edges going from the Node u to the Node v
      */
     public List<Edge> getEdges(int u, int v){
-        //todo
-        return null;
+        return getEdges(getNode(u),getNode(v));
     }
 
     /**
@@ -831,8 +856,7 @@ public class Graph {
      * @return a List who is a Deep-First Search of this Graph, starting from the Node u
      */
     public List<Node> getDFS(int u){
-        //todo
-        return null;
+        return getDFS(getNode(u));
     }
 
     /**
@@ -860,8 +884,7 @@ public class Graph {
      * @return a List who is a Breadth-First Search of this Graph, starting from the Node u
      */
     public List<Node> getBFS(int u){
-        //todo
-        return null;
+        return getBFS(getNode(u));
     }
 
     /**
