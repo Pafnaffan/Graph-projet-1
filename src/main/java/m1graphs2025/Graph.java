@@ -15,6 +15,14 @@ public class Graph {
     public Graph(){}
 
     /**
+     * Constructor that create this Graph with a Map to initialize
+     * @param adjEdList the Map
+     */
+    public Graph(Map<Node, List<Edge>> adjEdList){
+        this.adjEdList = adjEdList;
+    }
+
+    /**
      * Constructor that create this Graph with a successor array to initialize
      * @param sa the successor array in unspecified number of integers
      */
@@ -467,7 +475,7 @@ public class Graph {
         if(holdsNode(u) && holdsNode(v)){
             int num = 0;
             for(Edge e : getOutEdges(u)){
-                if(e.to() == v){
+                if(Objects.equals(e.to(),v)){
                     num++;
                 }
                 if(num > 1){
@@ -673,7 +681,7 @@ public class Graph {
             for (Node m : getAllNodes()) {
                 if (m != n) {
                     for (Edge e : adjEdList.get(m)) {
-                        if (e.to() == n) {
+                        if (Objects.equals(e.to(),n)) {
                             inEdges.add(e);
                         }
                     }
@@ -727,7 +735,15 @@ public class Graph {
      * @return a List of all the Edges going from the Node u to the Node v
      */
     public List<Edge> getEdges(Node u, Node v){
-        //todo
+        if(holdsNode(u) && holdsNode(v)){
+            List<Edge> res = new ArrayList<>();
+            for(Edge e : adjEdList.get(u)){
+                if(Objects.equals(e.to(),v)){
+                    res.add(e);
+                }
+            }
+            return res;
+        }
         return null;
     }
 
@@ -746,8 +762,11 @@ public class Graph {
      * @return a List of all the Edges of this Graph
      */
     public List<Edge> getAllEdges(){
-        //todo
-        return null;
+        List<Edge> res = new ArrayList<>();
+        for(Node n : adjEdList.keySet()){
+            res.addAll(adjEdList.get(n));
+        }
+        return res;
     }
 
     /**
@@ -791,7 +810,13 @@ public class Graph {
      * @return true if this Graph is a multi-graph, false otherwise
      */
     public boolean isMultiGraph(){
-        //todo
+        for(Node u : adjEdList.keySet()){
+            for(Node v : adjEdList.keySet()){
+                if(isMultiEdge(u,v)){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -800,8 +825,7 @@ public class Graph {
      * @return true if this Graph is a simple-graph, false otherwise
      */
     public boolean isSimpleGraph(){
-        //todo
-        return false;
+        return !isMultiGraph();
     }
 
     /**
@@ -827,8 +851,7 @@ public class Graph {
      * @return a copy of this Graph
      */
     public Graph copy(){
-        //todo
-        return null;
+        return new Graph(adjEdList);
     }
 
     /**
