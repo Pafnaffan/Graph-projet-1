@@ -212,11 +212,15 @@ public class Graph {
         if(n == null){
             return false;
         }
-        Node n_remove = getNode(n.getId());
-        if(n_remove == null){
+        Node nRemove = getNode(n.getId());
+        if(nRemove == null){
             return false;
         }
-        adjEdList.remove(n_remove);
+        List<Edge> inEdges = getInEdges(nRemove);
+        for(Edge e : inEdges){
+            removeEdge(e);
+        }
+        adjEdList.remove(nRemove);
         return false;
     }
 
@@ -774,8 +778,19 @@ public class Graph {
      * @return a representation of the Graph in a Successor Array
      */
     public int[] toSuccessorArray(){
-        //todo
-        return null;
+        List<Node> allNode = getAllNodes();
+        int[] sa = new int[allNode.size()*2];
+        Collections.sort(allNode);
+        int i = 0;
+        for(Node n : allNode){
+            for(Edge e : getOutEdges(n)){
+                sa[i] = e.to().getId();
+                i++;
+            }
+            sa[i] = 0;
+            i++;
+        }
+        return sa;
     }
 
     /**
@@ -783,8 +798,19 @@ public class Graph {
      * @return a representation of this Graph in an adjacency matrix
      */
     public int[][] toAdjMatrix(){
-        //todo
-        return null;
+        List<Node> allNode = getAllNodes();
+        Collections.sort(allNode);
+        int[][] am = new int[allNode.size()][allNode.size()];
+        for(int i = 0; i<allNode.size(); i++){
+            for(int j = 0; j<allNode.size(); j++){
+                if(existsEdge(allNode.get(i),allNode.get(j))){
+                    am[i][j] = 1;
+                } else {
+                    am[i][j] = 0;
+                }
+            }
+        }
+        return am;
     }
 
     /**
@@ -792,8 +818,14 @@ public class Graph {
      * @return the reverse of this Graph
      */
     public Graph getReverse(){
-        //todo
-        return null;
+        Graph reverseGraph = new Graph();
+        for(Node n : getAllNodes()){
+            reverseGraph.addNode(n);
+        }
+        for(Edge e : getAllEdges()){
+            reverseGraph.addEdge(e.to(),e.from());
+        }
+        return reverseGraph;
     }
 
     /**
@@ -801,8 +833,15 @@ public class Graph {
      * @return the transitive closure of this Graph
      */
     public Graph getTransitiveClosure(){
-        //todo
-        return null;
+        Graph tc = copy();
+        for(Node u : tc.getAllNodes()){
+            for(Edge p : tc.getInEdges(u)){
+                for(Edge s : tc.getOutEdges(u)){
+                    tc.addEdge(p.from(),s.to());
+                }
+            }
+        }
+        return tc;
     }
 
     /**
