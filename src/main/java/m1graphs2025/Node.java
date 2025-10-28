@@ -2,6 +2,7 @@ package m1graphs2025;
 
 import javax.naming.Name;
 import java.util.List;
+import java.util.Objects;
 
 public class Node implements Comparable<Node> {
 
@@ -161,7 +162,13 @@ public class Node implements Comparable<Node> {
         return super.hashCode();
     }
 
+    @Override
     public int compareTo(Node o) {
        return this.id - o.getId();
+    }
+
+    @Override
+    public String toString() {
+        return Objects.requireNonNullElseGet(name, () -> "" + id);
     }
 }

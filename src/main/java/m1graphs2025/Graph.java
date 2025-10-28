@@ -156,13 +156,29 @@ public class Graph {
     }
 
     /**
-     * Method that return true if the Node n is a Node of this Graph, otherwise false
+     * Method that return true if the Node n have this Graph for holder, otherwise false
      * @param n the Node to test
-     * @return true if the Node n is a Node of this Graph, otherwise false
+     * @return true if the Node n have this Graph for holder, otherwise false
      */
     public boolean holdsNode(Node n){
         if(n != null){
             return n.getGraph() == this;
+        }
+        return false;
+    }
+
+    /**
+     * Method that return true if the Node n is in this Graph, otherwise false
+     * @param n the Node to test
+     * @return true if the Node n is in this Graph, otherwise false
+     */
+    public boolean hasNode(Node n){
+        if(n != null && n.getGraph() == this){
+            for(Node v : getAllNodes()){
+                if(Objects.equals(n,v)){
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -200,7 +216,7 @@ public class Graph {
      * @return true if the Node has been added, otherwise false
      */
     public boolean addNode(int n){
-        return addNode(getNode(n));
+        return addNode(new Node(n,this));
     }
 
     /**
@@ -515,11 +531,7 @@ public class Graph {
      * @param to the Node where the Edge end
      */
     public void addEdge(Node from, Node to){
-        if(holdsNode(from) && holdsNode(to)){
-            if(holdsNode(from) && holdsNode(to)){
-                adjEdList.get(from).add(new Edge(from,to));
-            }
-        }
+        addEdge(from,to,null);
     }
 
     /**
@@ -529,15 +541,17 @@ public class Graph {
      * @param weight the weight of the Edge
      */
     public void addEdge(Node from, Node to, Integer weight){
-        if(holdsNode(from) && holdsNode(to)){
-            if(weight == null){
-                addEdge(from,to);
-            }
-            else {
-                if(holdsNode(from) && holdsNode(to)){
-                    adjEdList.get(from).add(new Edge(from,to,weight));
-                }
-            }
+        if(!hasNode(from)){
+            addNode(from);
+        }
+        if(!hasNode(to)){
+            addNode(to);
+        }
+        if(weight == null) {
+            adjEdList.get(from).add(new Edge(from,to));
+        }
+        else {
+            adjEdList.get(from).add(new Edge(from,to,weight));
         }
     }
 
@@ -547,7 +561,15 @@ public class Graph {
      * @param to the id of the Node where the Edge end
      */
     public void addEdge(int from, int to){
-        addEdge(getNode(from),getNode(to));
+        Node nFrom = getNode(from);
+        Node nTo = getNode(to);
+        if(nFrom == null){
+            nFrom = new Node(from,this);
+        }
+        if(nTo == null){
+            nTo = new Node(to,this);
+        }
+        addEdge(nFrom,nTo);
     }
 
     /**
@@ -557,7 +579,15 @@ public class Graph {
      * @param weight the weight of the Edge
      */
     public void addEdge(int from, int to, Integer weight){
-        addEdge(getNode(from),getNode(to),weight);
+        Node nFrom = getNode(from);
+        Node nTo = getNode(to);
+        if(nFrom == null){
+            nFrom = new Node(from,this);
+        }
+        if(nTo == null){
+            nTo = new Node(to,this);
+        }
+        addEdge(nFrom,nTo,weight);
     }
 
     /**
@@ -998,8 +1028,20 @@ public class Graph {
      * @return a String of this Graph in the DOT syntax
      */
     public String toDotString(){
-        //todo
-        return null;
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph {\n");
+        sb.append("\trankdir=LR\n");
+        List<Node> nl = getAllNodes();
+        Collections.sort(nl);
+        for (Node n : nl) {
+            List<Edge> el = getOutEdges(n);
+            Collections.sort(el);
+            for (Edge e : el) {
+                sb.append("\t").append(e.from()).append(" -> ").append(e.to()).append("\n");
+            }
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
     /**
