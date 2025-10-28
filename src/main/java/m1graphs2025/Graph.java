@@ -774,8 +774,24 @@ public class Graph {
      * @return a representation of the Graph in a Successor Array
      */
     public int[] toSuccessorArray(){
-        //todo
-        return null;
+        List<Node> nodes = new ArrayList<>(this.getAllNodes());
+        List<Integer> successorArray = new ArrayList<>();
+
+        for (Node node : nodes) {
+            List<Node> successors = new ArrayList<>(node.getSuccessors());
+
+            for (Node succ : successors) {
+                successorArray.add(succ.getId());
+            }
+            successorArray.add(-1);
+        }
+
+        int[] array = new int[successorArray.size()];
+        for (int i = 0; i < successorArray.size(); i++) {
+            array[i] = successorArray.get(i);
+        }
+
+        return array;
     }
 
     /**
@@ -783,8 +799,26 @@ public class Graph {
      * @return a representation of this Graph in an adjacency matrix
      */
     public int[][] toAdjMatrix(){
-        //todo
-        return null;
+        List<Node> nodes = this.getAllNodes();
+        int n = nodes.size();
+
+        Map<Integer, Integer> indexMap = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            indexMap.put(nodes.get(i).getId(), i);
+        }
+
+        int[][] matrix = new int[n][n];
+
+        for (Node u : nodes) {
+            int i = indexMap.get(u.getId());
+
+            for (Node v : u.getSuccessors()) {
+                int j = indexMap.get(v.getId());
+                matrix[i][j] = 1;
+            }
+        }
+
+        return matrix;
     }
 
     /**
@@ -792,8 +826,22 @@ public class Graph {
      * @return the reverse of this Graph
      */
     public Graph getReverse(){
-        //todo
-        return null;
+        Graph reverseGraph = new Graph();
+
+        for (Node node : this.getAllNodes()) {
+            reverseGraph.addNode(new Node(node.getId(), reverseGraph));
+        }
+
+        for (Node u : this.getAllNodes()) {
+            List<Node> successors = this.getSuccessors(u);
+            for (Node v : successors) {
+                Node uRev = reverseGraph.getNode(u.getId());
+                Node vRev = reverseGraph.getNode(v.getId());
+                reverseGraph.addEdge(vRev, uRev);
+            }
+        }
+
+        return reverseGraph;
     }
 
     /**
@@ -801,8 +849,24 @@ public class Graph {
      * @return the transitive closure of this Graph
      */
     public Graph getTransitiveClosure(){
-        //todo
-        return null;
+        Graph closure = new Graph();
+        for (Node node : this.getAllNodes()) {
+            closure.addNode(new Node(node.getId(), closure));
+        }
+
+        for (Node u : this.getAllNodes()) {
+            List<Node> reachable = getDFS(u);
+
+            for (Node v : reachable) {
+                if (u != v) {
+                    Node uC = closure.getNode(u.getId());
+                    Node vC = closure.getNode(v.getId());
+                    closure.addEdge(uC, vC);
+                }
+            }
+        }
+
+        return closure;
     }
 
     /**
@@ -833,7 +897,17 @@ public class Graph {
      * @return true if this Graph has self-loops, false otherwise
      */
     public boolean hasSelfLoops(){
-        //todo
+        List<Node> nodes = this.getAllNodes();
+
+        for (Node node : nodes) {
+            List<Edge> outEdges = node.getOutEdges();
+
+            for (Edge e : outEdges) {
+                if (e.from().getId() == e.to().getId()) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -842,8 +916,25 @@ public class Graph {
      * @return a transformed (possibly) this multi-graph into a simple one
      */
     public Graph toSimpleGraph(){
-        //todo
-        return null;
+
+        Graph simpleGraph = new Graph();
+        for (Node node : this.getAllNodes()) {
+            simpleGraph.addNode(new Node(node.getId(), simpleGraph));
+        }
+
+        for (Node u : this.getAllNodes()) {
+            for (Edge e : u.getOutEdges()) {
+                if (e.isSelfLoop()) continue;
+
+                if (e.isMultiEdge()) continue;
+
+                Node from = simpleGraph.getNode(e.from().getId());
+                Node to = simpleGraph.getNode(e.to().getId());
+                simpleGraph.addEdge(from, to);
+            }
+        }
+
+        return simpleGraph;
     }
 
     /**
@@ -858,9 +949,39 @@ public class Graph {
      * Method that return a List who is a Deep-First Search of this Graph
      * @return a List who is a Deep-First Search of this Graph
      */
-    public List<Node> getDFS(){
-        //todo
-        return null;
+    public List<Node> getDFS() {
+        List<Node> visited = new ArrayList<>();
+        Set<Integer> visitedIds = new HashSet<>();
+
+        List<Node> sortedNodes = new ArrayList<>(this.getAllNodes());
+        sortedNodes.sort(Comparator.comparingInt(Node::getId));
+
+        for (Node node : sortedNodes) {
+            if (!visitedIds.contains(node.getId())) {
+                dfsHelper(node, visited, visitedIds);
+            }
+        }
+
+        return visited;
+    }
+
+    /**
+     * Helper method for recursive DFS traversal
+     */
+    private void dfsHelper(Node node, List<Node> visited, Set<Integer> visitedIds) {
+        if (node == null || visitedIds.contains(node.getId())) {
+            return;
+        }
+
+        visited.add(node);
+        visitedIds.add(node.getId());
+
+        List<Node> successors = new ArrayList<>(node.getSuccessors());
+        successors.sort(Comparator.comparingInt(Node::getId));
+
+        for (Node neighbor : successors) {
+            dfsHelper(neighbor, visited, visitedIds);
+        }
     }
 
     /**
@@ -869,8 +990,11 @@ public class Graph {
      * @return a List who is a Deep-First Search of this Graph, starting from the Node u
      */
     public List<Node> getDFS(Node u){
-        //todo
-        return null;
+        List<Node> visited = new ArrayList<>();
+        Set<Integer> visitedIds = new HashSet<>();
+
+        dfsHelper(u, visited, visitedIds);
+        return visited;
     }
 
     /**
@@ -887,18 +1011,54 @@ public class Graph {
      * @return a List who is a Breadth-First Search of this Graph
      */
     public List<Node> getBFS(){
-        //todo
-        return null;
-    }
+        List<Node> visited = new ArrayList<>();
+        Set<Integer> visitedIds = new HashSet<>();
 
+        List<Node> sortedNodes = new ArrayList<>(this.getAllNodes());
+        sortedNodes.sort(Comparator.comparingInt(Node::getId));
+
+        for (Node startNode : sortedNodes) {
+            if (!visitedIds.contains(startNode.getId())) {
+                bfsHelper(startNode, visited, visitedIds);
+            }
+        }
+
+        return visited;
+    }
+    /**
+     * Helper method implementing the BFS logic
+     */
+    private void bfsHelper(Node startNode, List<Node> visited, Set<Integer> visitedIds) {
+        Queue<Node> queue = new LinkedList<>();
+
+        visitedIds.add(startNode.getId());
+        queue.add(startNode);
+
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+            visited.add(current);
+
+            List<Node> successors = new ArrayList<>(current.getSuccessors());
+            successors.sort(Comparator.comparingInt(Node::getId));
+
+            for (Node neighbor : successors) {
+                if (!visitedIds.contains(neighbor.getId())) {
+                    visitedIds.add(neighbor.getId());
+                    queue.add(neighbor);
+                }
+            }
+        }
+    }
     /**
      * Method that return a List who is a Breadth-First Search of this Graph, starting from the Node u
      * @param u the Node where the BFS start
      * @return a List who is a Breadth-First Search of this Graph, starting from the Node u
      */
     public List<Node> getBFS(Node u){
-        //todo
-        return null;
+        List<Node> visited = new ArrayList<>();
+        Set<Integer> visitedIds = new HashSet<>();
+        bfsHelper(u, visited, visitedIds);
+        return visited;
     }
 
     /**
@@ -911,28 +1071,123 @@ public class Graph {
     }
 
     /**
-     * Method that
-     * @param nodeVisit
-     * @param edgeVisit
-     * @return
+     * Method that performs a rich Depth-First Search (DFS) traversal on this Graph,
+     * starting from the node with the lowest identifier.
+     * <p>
+     * During the traversal, this method characterizes each node by its visit information
+     * (color, predecessor, discovery and finish timestamps) and classifies each edge
+     * according to its type (TREE, BACKWARD, FORWARD, CROSS).
+     * </p>
+     *
+     * @param nodeVisit a map storing, for each node, its visit information
+     *                  such as color, discovery/finish times, and predecessor
+     * @param edgeVisit a map storing, for each edge, its visit type
+     *                  (TREE, BACKWARD, FORWARD, or CROSS)
+     * @return a list of nodes visited during the traversal,
+     *         ordered by their finishing times
      */
     public List<Node> getDFSWithVisitInfo(Map<Node,NodeVisitInfo> nodeVisit,Map<Edge,EdgeVisitType> edgeVisit){
-        //todo
-        return null;
+        List<Node> result = new ArrayList<>();
+        List<Node> allNodes = this.getAllNodes();
+        Collections.sort(allNodes);
+
+        int[] time = {0};
+        for (Node n : allNodes) {
+            nodeVisit.put(n, new NodeVisitInfo());
+        }
+
+        for (Node n : allNodes) {
+            if (nodeVisit.get(n).getColour() == NodeVisitInfo.NodeColour.WHITE) {
+                dfsVisit(n, nodeVisit, edgeVisit, result, time);
+            }
+        }
+
+        return result;
     }
 
     /**
-     * Method that
-     * @param u
-     * @param nodeVisit
-     * @param edgeVisit
-     * @return
+     * Method that performs a rich Depth-First Search (DFS) traversal on this Graph,
+     * starting from a specific node {@code u}.
+     * <p>
+     * The traversal computes, for each node, its color, predecessor,
+     * discovery and finish timestamps, and for each edge, its classification type.
+     * If some nodes are not reachable from {@code u}, additional DFS calls
+     * are made to ensure that all nodes in the graph are visited.
+     * </p>
+     *
+     * @param u the starting node for the DFS traversal
+     * @param nodeVisit a map storing visit information for each node
+     * @param edgeVisit a map storing edge classification types for each edge
+     * @return a list of nodes visited during the traversal,
+     *         ordered by their finishing times
      */
     public List<Node> getDFSWithVisitInfo(Node u,Map<Node,NodeVisitInfo> nodeVisit,Map<Edge,EdgeVisitType> edgeVisit){
-        //todo
-        return null;
-    }
+        List<Node> result = new ArrayList<>();
+        List<Node> allNodes = this.getAllNodes();
+        int[] time = {0};
 
+        for (Node n : allNodes) {
+            nodeVisit.put(n, new NodeVisitInfo());
+        }
+
+        dfsVisit(u, nodeVisit, edgeVisit, result, time);
+
+        for (Node n : allNodes) {
+            if (nodeVisit.get(n).getColour() == NodeVisitInfo.NodeColour.WHITE) {
+                dfsVisit(n, nodeVisit, edgeVisit, result, time);
+            }
+        }
+
+        return result;
+    }
+    /**
+     * Internal recursive helper method that performs the core logic of the rich DFS traversal.
+     * <p>
+     * This method updates the visit information of each node (color, discovery and finish times)
+     * and classifies edges based on their traversal type (TREE, BACKWARD, FORWARD, CROSS).
+     * It is called recursively for each unvisited neighbor of the current node.
+     * </p>
+     *
+     * @param u the current node being explored
+     * @param nodeVisit a map containing visit information for all nodes
+     * @param edgeVisit a map containing classification types for all edges
+     * @param result a list storing nodes in their finishing order
+     * @param time an integer array of size 1 used as a mutable counter
+     *             to record discovery and finishing timestamps
+     */
+    private void dfsVisit(Node u,
+                          Map<Node, NodeVisitInfo> nodeVisit,
+                          Map<Edge, EdgeVisitType> edgeVisit,
+                          List<Node> result,
+                          int[] time) {
+
+        NodeVisitInfo infoU = nodeVisit.get(u);
+        infoU.setColour(NodeVisitInfo.NodeColour.GRAY);
+        infoU.setDiscoveryTime(++time[0]);
+
+        for (Edge e : getOutEdges(u)) {
+            Node v = e.to();
+            NodeVisitInfo infoV = nodeVisit.get(v);
+
+            if (infoV.getColour() == NodeVisitInfo.NodeColour.WHITE) {
+                edgeVisit.put(e, EdgeVisitType.TREE);
+                infoV.setPredecessor(u);
+                dfsVisit(v, nodeVisit, edgeVisit, result, time);
+            } else if (infoV.getColour() == NodeVisitInfo.NodeColour.GRAY) {
+                edgeVisit.put(e, EdgeVisitType.BACKWARD);
+            } else if (infoV.getColour() == NodeVisitInfo.NodeColour.BLACK) {
+                if (infoU.getDiscoveryTime() < infoV.getDiscoveryTime()) {
+                    edgeVisit.put(e, EdgeVisitType.FORWARD);
+                } else {
+                    edgeVisit.put(e, EdgeVisitType.CROSS);
+                }
+            }
+        }
+
+        infoU.setColour(NodeVisitInfo.NodeColour.BLACK);
+        infoU.setFinishTime(++time[0]);
+        result.add(u);
+    }
     /**
      * Method that return a Graph from an imported DOT file
      * @param filename the path of the DOT file without extension
