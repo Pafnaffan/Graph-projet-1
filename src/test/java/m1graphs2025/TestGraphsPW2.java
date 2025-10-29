@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import m1graphs2025.*;
+
 public class TestGraphsPW2 {
 
 	public static void main(String[] args) {

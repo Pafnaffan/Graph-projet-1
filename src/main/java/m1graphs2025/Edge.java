@@ -53,6 +53,11 @@ public class Edge implements Comparable<Edge> {
     public Edge(int from, int to, Graph g){
         Node nfrom = g.getNode(from);
         Node nto = g.getNode(to);
+        if(nfrom == null){
+            throw new IllegalArgumentException("Node from must be non-null");
+        } else if (nto == null) {
+            throw new IllegalArgumentException("Node to must be non-null");
+        }
         this.from = nfrom;
         this.to = nto;
     }
@@ -67,6 +72,11 @@ public class Edge implements Comparable<Edge> {
     public Edge(int from, int to, Integer weight, Graph g){
         Node nfrom = g.getNode(from);
         Node nto = g.getNode(to);
+        if(nfrom == null){
+            throw new IllegalArgumentException("Node from must be non-null");
+        } else if (nto == null) {
+            throw new IllegalArgumentException("Node to must be non-null");
+        }
         this.from = nfrom;
         this.to = nto;
         this.weight = weight;
@@ -148,6 +158,7 @@ public class Edge implements Comparable<Edge> {
         return super.hashCode();
     }
 
+    @Override
     public int compareTo(Edge o) {
         if(this.from.compareTo(o.from()) < 0){
             return -1;
@@ -166,5 +177,10 @@ public class Edge implements Comparable<Edge> {
                 return 0;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return from+"->"+to;
     }
 }
