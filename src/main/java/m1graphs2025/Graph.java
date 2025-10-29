@@ -1,8 +1,6 @@
 package m1graphs2025;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class Graph {
@@ -1199,8 +1197,7 @@ public class Graph {
      * @return a Graph from an imported DOT file
      */
     public static Graph fromDotFile(String filename){
-        //todo
-        return null;
+        return new Graph(filename+".gv");
     }
 
     /**
@@ -1210,8 +1207,7 @@ public class Graph {
      * @return a Graph from an imported DOT file with a different extension
      */
     public static Graph fromDotFile(String filename, String extension){
-        //todo
-        return null;
+        return new Graph(filename+extension);
     }
 
     /**
@@ -1239,8 +1235,12 @@ public class Graph {
      * Method that export a DOT file of this Graph
      * @param fileName the path of the DOT file without extension
      */
-    public void toDotFile(String fileName){
-        //todo
+    public void toDotFile(String fileName) throws IOException {
+        try (FileWriter writer = new FileWriter(fileName+".gv")) {
+            writer.write(toDotString());
+        } catch (IOException e) {
+            throw new IOException("Error writing file");
+        }
     }
 
     /**
@@ -1248,7 +1248,11 @@ public class Graph {
      * @param fileName the path of the DOT file without extension
      * @param extension the extension of the DOT file
      */
-    public void toDotFile(String fileName, String extension){
-        //todo
+    public void toDotFile(String fileName, String extension) throws IOException{
+        try (FileWriter writer = new FileWriter(fileName+extension)) {
+            writer.write(toDotString());
+        } catch (IOException e) {
+            throw new IOException("Error writing file");
+        }
     }
 }
