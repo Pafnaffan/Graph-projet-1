@@ -16,9 +16,11 @@ public class Edge implements Comparable<Edge> {
     public Edge(Node from, Node to){
         if(from == null){
             throw new IllegalArgumentException("Node from must be non-null");
-        } else if (to == null) {
+        }
+        if (to == null) {
             throw new IllegalArgumentException("Node to must be non-null");
-        } else if (from.getGraph() != to.getGraph()){
+        }
+        if (from.getGraph() != to.getGraph()){
             throw new IllegalArgumentException("Nodes from and to must be from the same Graph");
         }
         this.from = from;
@@ -34,9 +36,11 @@ public class Edge implements Comparable<Edge> {
     public Edge(Node from, Node to, Integer weight){
         if(from == null){
             throw new IllegalArgumentException("Node from must be non-null");
-        } else if (to == null) {
+        }
+        if (to == null) {
             throw new IllegalArgumentException("Node to must be non-null");
-        } else if (from.getGraph() != to.getGraph()){
+        }
+        if (from.getGraph() != to.getGraph()){
             throw new IllegalArgumentException("Nodes from and to must be from the same Graph");
         }
         this.from = from;
@@ -54,9 +58,12 @@ public class Edge implements Comparable<Edge> {
         Node nfrom = g.getNode(from);
         Node nto = g.getNode(to);
         if(nfrom == null){
-            throw new IllegalArgumentException("Node from must be non-null");
-        } else if (nto == null) {
-            throw new IllegalArgumentException("Node to must be non-null");
+            nfrom = new Node(from,g);
+            g.addNode(nfrom);
+        }
+        if (nto == null) {
+            nto = new Node(to,g);
+            g.addNode(nto);
         }
         this.from = nfrom;
         this.to = nto;
@@ -73,9 +80,12 @@ public class Edge implements Comparable<Edge> {
         Node nfrom = g.getNode(from);
         Node nto = g.getNode(to);
         if(nfrom == null){
-            throw new IllegalArgumentException("Node from must be non-null");
-        } else if (nto == null) {
-            throw new IllegalArgumentException("Node to must be non-null");
+            nfrom = new Node(from,g);
+            g.addNode(nfrom);
+        }
+        if (nto == null) {
+            nto = new Node(to,g);
+            g.addNode(nto);
         }
         this.from = nfrom;
         this.to = nto;

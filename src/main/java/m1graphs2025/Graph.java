@@ -13,14 +13,6 @@ public class Graph {
     public Graph(){}
 
     /**
-     * Constructor that create this Graph with a Map to initialize
-     * @param adjEdList the Map
-     */
-    public Graph(Map<Node, List<Edge>> adjEdList){
-        this.adjEdList = adjEdList;
-    }
-
-    /**
      * Constructor that create this Graph with a successor array to initialize
      * @param sa the successor array in unspecified number of integers
      */
@@ -85,37 +77,33 @@ public class Graph {
             while ((ligne = br.readLine()) != null) {
                 if (ligne.contains("->")) {
                     Scanner sc = new Scanner(ligne);
+                    sc.useDelimiter("\\D+");
                     int i = 0;
                     Node from = null;
                     Node to = null;
                     Integer weight = null;
-                    while (sc.hasNext()) {
-                        if (sc.hasNextInt()) {
-                            int x = sc.nextInt();
-                            if(i == 0){
-                                from = getNode(x);
-                                if(from == null){
-                                    from = new Node(x,this);
-                                    addNode(from);
-                                }
-                            }
-                            else if(i == 1) {
-                                to = getNode(x);
-                                if(to == null){
-                                    to = new Node(x,this);
-                                    addNode(to);
-                                }
-                            }
-                            else if(i == 2) {
-                                weight = x;
+                    while (sc.hasNextInt()) {
+                        int x = sc.nextInt();
+                        if(i == 0){
+                            from = getNode(x);
+                            if(from == null){
+                                from = new Node(x,this);
+                                addNode(from);
                             }
                         }
-                        else {
-                            addEdge(from,to,weight);
-                            sc.next();
+                        else if(i == 1) {
+                            to = getNode(x);
+                            if(to == null){
+                                to = new Node(x,this);
+                                addNode(to);
+                            }
+                        }
+                        else if(i == 2) {
+                            weight = x;
                         }
                         i++;
                     }
+                    addEdge(from,to,weight);
                     sc.close();
                 }
             }
@@ -539,17 +527,18 @@ public class Graph {
      * @param weight the weight of the Edge
      */
     public void addEdge(Node from, Node to, Integer weight){
-        if(!hasNode(from)){
-            addNode(from);
-        }
-        if(!hasNode(to)){
-            addNode(to);
-        }
-        if(weight == null) {
-            adjEdList.get(from).add(new Edge(from,to));
-        }
-        else {
-            adjEdList.get(from).add(new Edge(from,to,weight));
+        if(from != null && to != null) {
+            if (!hasNode(from)) {
+                addNode(from);
+            }
+            if (!hasNode(to)) {
+                addNode(to);
+            }
+            if (weight == null) {
+                adjEdList.get(from).add(new Edge(from, to));
+            } else {
+                adjEdList.get(from).add(new Edge(from, to, weight));
+            }
         }
     }
 
@@ -807,7 +796,8 @@ public class Graph {
      */
     public int[] toSuccessorArray(){
         List<Node> allNode = getAllNodes();
-        int[] sa = new int[allNode.size()*2];
+        int size = allNode.size();
+        int[] sa = new int[(size*size)+size];
         Collections.sort(allNode);
         int i = 0;
         for(Node n : allNode){
@@ -828,9 +818,10 @@ public class Graph {
     public int[][] toAdjMatrix(){
         List<Node> allNode = getAllNodes();
         Collections.sort(allNode);
-        int[][] am = new int[allNode.size()][allNode.size()];
-        for(int i = 0; i<allNode.size(); i++){
-            for(int j = 0; j<allNode.size(); j++){
+        int size = allNode.size();
+        int[][] am = new int[size][size];
+        for(int i = 0; i<size; i++){
+            for(int j = 0; j<size; j++){
                 if(existsEdge(allNode.get(i),allNode.get(j))){
                     am[i][j] = 1;
                 } else {
@@ -848,10 +839,10 @@ public class Graph {
     public Graph getReverse(){
         Graph reverseGraph = new Graph();
         for(Node n : getAllNodes()){
-            reverseGraph.addNode(n);
+            reverseGraph.addNode(n.getId());
         }
         for(Edge e : getAllEdges()){
-            reverseGraph.addEdge(e.to(),e.from());
+            reverseGraph.addEdge(e.to().getId(),e.from().getId());
         }
         return reverseGraph;
     }
@@ -877,8 +868,8 @@ public class Graph {
      * @return true if this Graph is a multi-graph, false otherwise
      */
     public boolean isMultiGraph(){
-        for(Node u : adjEdList.keySet()){
-            for(Node v : adjEdList.keySet()){
+        for(Node u : getAllNodes()){
+            for(Node v : getAllNodes()){
                 if(isMultiEdge(u,v)){
                     return true;
                 }
@@ -919,24 +910,15 @@ public class Graph {
      * @return a transformed (possibly) this multi-graph into a simple one
      */
     public Graph toSimpleGraph(){
-
         Graph simpleGraph = new Graph();
-        for (Node node : this.getAllNodes()) {
-            simpleGraph.addNode(new Node(node.getId(), simpleGraph));
+        for (Node n : getAllNodes()) {
+            simpleGraph.addNode(n.getId());
         }
-
-        for (Node u : this.getAllNodes()) {
-            for (Edge e : u.getOutEdges()) {
-                if (e.isSelfLoop()) continue;
-
-                if (e.isMultiEdge()) continue;
-
-                Node from = simpleGraph.getNode(e.from().getId());
-                Node to = simpleGraph.getNode(e.to().getId());
-                simpleGraph.addEdge(from, to);
+        for(Edge e : getAllEdges()){
+            if(!simpleGraph.existsEdge(e.from().getId(),e.to().getId())){
+                addEdge(e.from().getId(),e.from().getId(),e.getWeight());
             }
         }
-
         return simpleGraph;
     }
 
@@ -945,7 +927,14 @@ public class Graph {
      * @return a copy of this Graph
      */
     public Graph copy(){
-        return new Graph(adjEdList);
+        Graph copy = new Graph();
+        for(Node n : getAllNodes()){
+            copy.addNode(n.getId());
+        }
+        for (Edge e : getAllEdges()){
+            copy.addEdge(e.from().getId(),e.to().getId());
+        }
+        return copy;
     }
 
     /**
