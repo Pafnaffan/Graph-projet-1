@@ -27,5 +27,9 @@ public class NodeVisitInfo {
     public Integer getFinishTime() { return finishTime; }
     public void setFinishTime(Integer finishTime) { this.finishTime = finishTime; }
 
+    @Override
+    public String toString() {
+        return "NodeVisitInfo [colour="+colour+", predecessor="+predecessor+", discovery="+discoveryTime+", finished="+finishTime+"]";
+    }
 }
 

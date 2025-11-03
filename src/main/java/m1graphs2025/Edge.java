@@ -121,7 +121,7 @@ public class Edge implements Comparable<Edge> {
      * @return true if this Edge is a self-loop, otherwise false
      */
     public boolean isSelfLoop(){
-        return this.from == this.to;
+        return Objects.equals(this.from,this.to);
     }
 
     /**
@@ -155,8 +155,8 @@ public class Edge implements Comparable<Edge> {
             return false;
         }
         Edge e = (Edge)o;
-        if(this.from == e.from()){
-            if(this.to == e.to()){
+        if(Objects.equals(this.from,e.from())){
+            if(Objects.equals(this.to,e.to())){
                 return Objects.equals(this.weight, e.weight);
             }
         }

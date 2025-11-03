@@ -5,7 +5,7 @@ import java.util.*;
 
 public class Graph {
 
-    private Map<Node, List<Edge>> adjEdList = new HashMap<>();
+    protected Map<Node, List<Edge>> adjEdList = new HashMap<>();
 
     /**
      * Constructor that create this empty Graph
@@ -75,7 +75,7 @@ public class Graph {
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String ligne;
             while ((ligne = br.readLine()) != null) {
-                if (ligne.contains("->")) {
+                if (ligne.matches(".*\\d+.*")) {
                     Scanner sc = new Scanner(ligne);
                     sc.useDelimiter("\\D+");
                     int i = 0;
@@ -148,7 +148,7 @@ public class Graph {
      */
     public boolean holdsNode(Node n){
         if(n != null){
-            return n.getGraph() == this;
+            return Objects.equals(n.getGraph(),this);
         }
         return false;
     }
@@ -159,7 +159,7 @@ public class Graph {
      * @return true if the Node n is in this Graph, otherwise false
      */
     public boolean hasNode(Node n){
-        if(n != null && n.getGraph() == this){
+        if(n != null && holdsNode(n)){
             for(Node v : getAllNodes()){
                 if(Objects.equals(n,v)){
                     return true;
@@ -286,7 +286,7 @@ public class Graph {
      */
     public List<Node> getSuccessors(Node n){
         if(holdsNode(n)) {
-            List<Edge> edges = adjEdList.get(n);
+            List<Edge> edges = getOutEdges(n);
             List<Node> successors = new ArrayList<>();
             for (Edge e : edges) {
                 if (!successors.contains(e.to())) {
@@ -314,7 +314,7 @@ public class Graph {
      */
     public List<Node> getSuccessorsMulti(Node n){
         if(holdsNode(n)) {
-            List<Edge> edges = adjEdList.get(n);
+            List<Edge> edges = getOutEdges(n);
             List<Node> successors = new ArrayList<>();
             for (Edge e : edges) {
                 successors.add(e.to());
@@ -342,12 +342,12 @@ public class Graph {
     public boolean adjacent(Node u, Node v){
         if(holdsNode(u) && holdsNode(v)) {
             for (Edge e : adjEdList.get(u)) {
-                if (e.to() == v) {
+                if (Objects.equals(e.to(),v)) {
                     return true;
                 }
             }
             for (Edge e : adjEdList.get(v)) {
-                if (e.to() == u) {
+                if (Objects.equals(e.to(),u)) {
                     return true;
                 }
             }
@@ -463,7 +463,7 @@ public class Graph {
     public boolean existsEdge(Edge e){
         if(e != null && holdsNode(e.from())){
             for(Edge f : getAllEdges()){
-                if(f == e){
+                if(Objects.equals(f,e)){
                     return true;
                 }
             }
@@ -700,11 +700,9 @@ public class Graph {
         if(holdsNode(n)) {
             List<Edge> inEdges = new ArrayList<>();
             for (Node m : getAllNodes()) {
-                if (m != n) {
-                    for (Edge e : adjEdList.get(m)) {
-                        if (Objects.equals(e.to(),n)) {
-                            inEdges.add(e);
-                        }
+                for (Edge e : adjEdList.get(m)) {
+                    if (Objects.equals(e.to(),n)) {
+                        inEdges.add(e);
                     }
                 }
             }
@@ -730,8 +728,16 @@ public class Graph {
     public List<Edge> getIncidentEdges(Node n){
         if(holdsNode(n)){
             List<Edge> incidentEdges = new ArrayList<>(getOutEdges(n));
+            boolean allReadyPut = false;
             for(Edge e : getInEdges(n)){
-                if(!incidentEdges.contains(e)){
+                if(Objects.equals(e.from(),e.to())){
+                    if(!allReadyPut){
+                        incidentEdges.add(e);
+                        allReadyPut = true;
+                    } else {
+                        allReadyPut = false;
+                    }
+                } else {
                     incidentEdges.add(e);
                 }
             }
@@ -796,12 +802,11 @@ public class Graph {
      */
     public int[] toSuccessorArray(){
         List<Node> allNode = getAllNodes();
-        int size = allNode.size();
-        int[] sa = new int[(size*size)+size];
+        int[] sa = new int[getAllEdges().size()+allNode.size()];
         Collections.sort(allNode);
         int i = 0;
         for(Node n : allNode){
-            for(Edge e : getOutEdges(n)){
+            for(Edge e : adjEdList.get(n)){
                 sa[i] = e.to().getId();
                 i++;
             }
@@ -822,7 +827,8 @@ public class Graph {
         int[][] am = new int[size][size];
         for(int i = 0; i<size; i++){
             for(int j = 0; j<size; j++){
-                if(existsEdge(allNode.get(i),allNode.get(j))){
+                List<Edge> e = getEdges(allNode.get(i),allNode.get(j));
+                if(e != null){
                     am[i][j] = 1;
                 } else {
                     am[i][j] = 0;
@@ -853,10 +859,17 @@ public class Graph {
      */
     public Graph getTransitiveClosure(){
         Graph tc = copy();
+        List<Edge> inEdge;
+        List<Edge> outEdge;
         for(Node u : tc.getAllNodes()){
-            for(Edge p : tc.getInEdges(u)){
-                for(Edge s : tc.getOutEdges(u)){
-                    tc.addEdge(p.from(),s.to());
+            inEdge = tc.getInEdges(u);
+            for(int i = 0; i<inEdge.size(); i++){
+                outEdge = tc.getOutEdges(u);
+                for(int j = 0; j<outEdge.size(); j++){
+                    Edge e = new Edge(inEdge.get(i).from(),outEdge.get(j).to());
+                    if(!tc.existsEdge(e) && !Objects.equals(e.from(),e.to())){
+                        tc.addEdge(e);
+                    }
                 }
             }
         }
@@ -892,10 +905,8 @@ public class Graph {
      */
     public boolean hasSelfLoops(){
         List<Node> nodes = this.getAllNodes();
-
         for (Node node : nodes) {
             List<Edge> outEdges = node.getOutEdges();
-
             for (Edge e : outEdges) {
                 if (e.from().getId() == e.to().getId()) {
                     return true;
@@ -944,16 +955,13 @@ public class Graph {
     public List<Node> getDFS() {
         List<Node> visited = new ArrayList<>();
         Set<Integer> visitedIds = new HashSet<>();
-
         List<Node> sortedNodes = new ArrayList<>(this.getAllNodes());
         sortedNodes.sort(Comparator.comparingInt(Node::getId));
-
         for (Node node : sortedNodes) {
             if (!visitedIds.contains(node.getId())) {
                 dfsHelper(node, visited, visitedIds);
             }
         }
-
         return visited;
     }
 
@@ -964,13 +972,10 @@ public class Graph {
         if (node == null || visitedIds.contains(node.getId())) {
             return;
         }
-
         visited.add(node);
         visitedIds.add(node.getId());
-
         List<Node> successors = new ArrayList<>(node.getSuccessors());
         successors.sort(Comparator.comparingInt(Node::getId));
-
         for (Node neighbor : successors) {
             dfsHelper(neighbor, visited, visitedIds);
         }
@@ -984,7 +989,6 @@ public class Graph {
     public List<Node> getDFS(Node u){
         List<Node> visited = new ArrayList<>();
         Set<Integer> visitedIds = new HashSet<>();
-
         dfsHelper(u, visited, visitedIds);
         return visited;
     }
@@ -1005,10 +1009,8 @@ public class Graph {
     public List<Node> getBFS(){
         List<Node> visited = new ArrayList<>();
         Set<Integer> visitedIds = new HashSet<>();
-
         List<Node> sortedNodes = new ArrayList<>(this.getAllNodes());
         sortedNodes.sort(Comparator.comparingInt(Node::getId));
-
         for (Node startNode : sortedNodes) {
             if (!visitedIds.contains(startNode.getId())) {
                 bfsHelper(startNode, visited, visitedIds);
@@ -1017,22 +1019,19 @@ public class Graph {
 
         return visited;
     }
+
     /**
      * Helper method implementing the BFS logic
      */
     private void bfsHelper(Node startNode, List<Node> visited, Set<Integer> visitedIds) {
         Queue<Node> queue = new LinkedList<>();
-
         visitedIds.add(startNode.getId());
         queue.add(startNode);
-
         while (!queue.isEmpty()) {
             Node current = queue.poll();
             visited.add(current);
-
             List<Node> successors = new ArrayList<>(current.getSuccessors());
             successors.sort(Comparator.comparingInt(Node::getId));
-
             for (Node neighbor : successors) {
                 if (!visitedIds.contains(neighbor.getId())) {
                     visitedIds.add(neighbor.getId());
@@ -1041,6 +1040,7 @@ public class Graph {
             }
         }
     }
+
     /**
      * Method that return a List who is a Breadth-First Search of this Graph, starting from the Node u
      * @param u the Node where the BFS start
@@ -1065,102 +1065,74 @@ public class Graph {
     /**
      * Method that performs a rich Depth-First Search (DFS) traversal on this Graph,
      * starting from the node with the lowest identifier.
-     * <p>
      * During the traversal, this method characterizes each node by its visit information
      * (color, predecessor, discovery and finish timestamps) and classifies each edge
      * according to its type (TREE, BACKWARD, FORWARD, CROSS).
-     * </p>
-     *
-     * @param nodeVisit a map storing, for each node, its visit information
-     *                  such as color, discovery/finish times, and predecessor
-     * @param edgeVisit a map storing, for each edge, its visit type
-     *                  (TREE, BACKWARD, FORWARD, or CROSS)
-     * @return a list of nodes visited during the traversal,
-     *         ordered by their finishing times
+     * @param nodeVisit a map storing, for each node, its visit information such as color, discovery/finish times, and predecessor
+     * @param edgeVisit a map storing, for each edge, its visit type (TREE, BACKWARD, FORWARD, or CROSS)
+     * @return a list of nodes visited during the traversal, ordered by their finishing times
      */
     public List<Node> getDFSWithVisitInfo(Map<Node,NodeVisitInfo> nodeVisit,Map<Edge,EdgeVisitType> edgeVisit){
         List<Node> result = new ArrayList<>();
         List<Node> allNodes = this.getAllNodes();
         Collections.sort(allNodes);
-
         int[] time = {0};
         for (Node n : allNodes) {
             nodeVisit.put(n, new NodeVisitInfo());
         }
-
         for (Node n : allNodes) {
             if (nodeVisit.get(n).getColour() == NodeVisitInfo.NodeColour.WHITE) {
                 dfsVisit(n, nodeVisit, edgeVisit, result, time);
             }
         }
-
         return result;
     }
 
     /**
      * Method that performs a rich Depth-First Search (DFS) traversal on this Graph,
-     * starting from a specific node {@code u}.
-     * <p>
+     * starting from a specific node u
      * The traversal computes, for each node, its color, predecessor,
      * discovery and finish timestamps, and for each edge, its classification type.
-     * If some nodes are not reachable from {@code u}, additional DFS calls
+     * If some nodes are not reachable from u, additional DFS calls
      * are made to ensure that all nodes in the graph are visited.
-     * </p>
-     *
      * @param u the starting node for the DFS traversal
      * @param nodeVisit a map storing visit information for each node
      * @param edgeVisit a map storing edge classification types for each edge
-     * @return a list of nodes visited during the traversal,
-     *         ordered by their finishing times
+     * @return a list of nodes visited during the traversal, ordered by their finishing times
      */
     public List<Node> getDFSWithVisitInfo(Node u,Map<Node,NodeVisitInfo> nodeVisit,Map<Edge,EdgeVisitType> edgeVisit){
         List<Node> result = new ArrayList<>();
         List<Node> allNodes = this.getAllNodes();
         int[] time = {0};
-
         for (Node n : allNodes) {
             nodeVisit.put(n, new NodeVisitInfo());
         }
-
         dfsVisit(u, nodeVisit, edgeVisit, result, time);
-
         for (Node n : allNodes) {
             if (nodeVisit.get(n).getColour() == NodeVisitInfo.NodeColour.WHITE) {
                 dfsVisit(n, nodeVisit, edgeVisit, result, time);
             }
         }
-
         return result;
     }
     /**
      * Internal recursive helper method that performs the core logic of the rich DFS traversal.
-     * <p>
      * This method updates the visit information of each node (color, discovery and finish times)
      * and classifies edges based on their traversal type (TREE, BACKWARD, FORWARD, CROSS).
      * It is called recursively for each unvisited neighbor of the current node.
-     * </p>
-     *
      * @param u the current node being explored
      * @param nodeVisit a map containing visit information for all nodes
      * @param edgeVisit a map containing classification types for all edges
      * @param result a list storing nodes in their finishing order
-     * @param time an integer array of size 1 used as a mutable counter
-     *             to record discovery and finishing timestamps
+     * @param time an integer array of size 1 used as a mutable counter to record discovery and finishing timestamps
      */
-    private void dfsVisit(Node u,
-                          Map<Node, NodeVisitInfo> nodeVisit,
-                          Map<Edge, EdgeVisitType> edgeVisit,
-                          List<Node> result,
-                          int[] time) {
-
+    private void dfsVisit(Node u, Map<Node, NodeVisitInfo> nodeVisit, Map<Edge, EdgeVisitType> edgeVisit, List<Node> result, int[] time) {
         NodeVisitInfo infoU = nodeVisit.get(u);
         infoU.setColour(NodeVisitInfo.NodeColour.GRAY);
         infoU.setDiscoveryTime(++time[0]);
-
         for (Edge e : getOutEdges(u)) {
             Node v = e.to();
             NodeVisitInfo infoV = nodeVisit.get(v);
-
             if (infoV.getColour() == NodeVisitInfo.NodeColour.WHITE) {
                 edgeVisit.put(e, EdgeVisitType.TREE);
                 infoV.setPredecessor(u);
@@ -1175,11 +1147,11 @@ public class Graph {
                 }
             }
         }
-
         infoU.setColour(NodeVisitInfo.NodeColour.BLACK);
         infoU.setFinishTime(++time[0]);
         result.add(u);
     }
+
     /**
      * Method that return a Graph from an imported DOT file
      * @param filename the path of the DOT file without extension
@@ -1210,10 +1182,25 @@ public class Graph {
         List<Node> nl = getAllNodes();
         Collections.sort(nl);
         for (Node n : nl) {
-            List<Edge> el = getOutEdges(n);
-            Collections.sort(el);
-            for (Edge e : el) {
-                sb.append("\t").append(e.from()).append(" -> ").append(e.to()).append("\n");
+            if(getIncidentEdges(n).isEmpty()){
+                sb.append("\t").append(n).append("\n");
+            } else {
+                List<Edge> el = adjEdList.get(n);
+                Collections.sort(el);
+                for (Edge e : el) {
+                    sb.append("\t").append(e.from());
+                    if(this.getClass() == Graph.class){
+                        sb.append(" -> ");
+                    }
+                    else {
+                        sb.append(" -- ");
+                    }
+                    sb.append(e.to());
+                    if(e.isWeighted()){
+                        sb.append(" [label=").append(e.getWeight()).append(", len=").append(e.getWeight()).append("]");
+                    }
+                    sb.append("\n");
+                }
             }
         }
         sb.append("}");
