@@ -2,10 +2,13 @@ package m1maxflow2025;
 
 import m1graphs2025.*;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class FlowNetwork extends Graph {
 
+    String name;
     Map<Edge,Integer> flow;
 
     /**
@@ -50,11 +53,13 @@ public class FlowNetwork extends Graph {
     }
 
     /**
-     * Method that remove an Edge and his flow to the Map
+     * Method that remove the Edge e and his flow to the Map
      * @return true if it's removed, otherwise false
      */
-    public boolean removeFlow(){
-        //TODO
+    public boolean removeFlow(Edge e){
+        if(e != null){
+            return flow.remove(e) != null;
+        }
         return false;
     }
 
@@ -76,7 +81,34 @@ public class FlowNetwork extends Graph {
      */
     @Override
     public String toDotString() {
-        //TODO
-        return super.toDotString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph "+((name != null) ? name : "")+" {\n");
+        sb.append("\trankdir=LR\n");
+        List<Node> nl = getAllNodes();
+        Collections.sort(nl);
+        for (Node n : nl) {
+            if(getIncidentEdges(n).isEmpty()){
+                sb.append("\t").append(n).append("\n");
+            } else {
+                List<Edge> el = adjEdList.get(n);
+                Collections.sort(el);
+                for (Edge e : el) {
+                    sb.append("\t").append(e.from());
+                    if(this.getClass() == Graph.class){
+                        sb.append(" -> ");
+                    }
+                    else {
+                        sb.append(" -- ");
+                    }
+                    sb.append(e.to());
+                    if(e.isWeighted()){
+                        sb.append(" [label=").append(e.getWeight()).append(", len=").append(e.getWeight()).append("]");
+                    }
+                    sb.append("\n");
+                }
+            }
+        }
+        sb.append("}");
+        return sb.toString();
     }
 }
