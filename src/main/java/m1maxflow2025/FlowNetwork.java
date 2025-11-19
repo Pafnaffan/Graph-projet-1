@@ -20,6 +20,15 @@ public class FlowNetwork extends Graph {
     }
 
     /**
+     * Method that create a residual network from the actual flow of the FlowNetwork
+     * @return the residual network
+     */
+    public FlowNetwork computeResidualNetwork(){
+        //TODO
+        return null;
+    }
+
+    /**
      * Method that compute the maximum flow in this FlowNetwork by using the Ford-Fulkerson method
      */
     public void fordFulkerson(){
@@ -93,14 +102,7 @@ public class FlowNetwork extends Graph {
                 List<Edge> el = adjEdList.get(n);
                 Collections.sort(el);
                 for (Edge e : el) {
-                    sb.append("\t").append(e.from());
-                    if(this.getClass() == Graph.class){
-                        sb.append(" -> ");
-                    }
-                    else {
-                        sb.append(" -- ");
-                    }
-                    sb.append(e.to());
+                    sb.append("\t").append(e.from().getName()).append(" -> ").append(e.to().getName());
                     if(e.isWeighted()){
                         sb.append(" [label=").append(e.getWeight()).append(", len=").append(e.getWeight()).append("]");
                     }
