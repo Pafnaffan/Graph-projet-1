@@ -2,9 +2,13 @@ package m1maxflow2025;
 
 import m1graphs2025.*;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class FlowNetwork extends Graph {
 
@@ -16,7 +20,73 @@ public class FlowNetwork extends Graph {
      * @param file the path of the DOT file
      */
     public FlowNetwork(String file){
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String ligne;
+            while ((ligne = br.readLine()) != null) {
+                if (ligne.matches(".*\\d+.*")) {
+                    System.out.println(ligne); //
+                    Scanner sc = new Scanner(ligne);
+                    sc.useDelimiter("\\D+");
+                    int i = 0;
+                    Node from = null;
+                    Node to = null;
+                    Integer weight = null;
+                    while (sc.hasNextInt()) {
+                        int x = sc.nextInt();
+                        System.out.println(x);
+                        if(i == 0){
+                            from = getNode(x);
+                            if(from == null){
+                                from = new Node(x,this);
+                                addNode(from);
+                            }
+                        }
+                        else if(i == 1) {
+                            to = getNode(x);
+                            if(to == null){
+                                to = new Node(x,this);
+                                addNode(to);
+                            }
+                        }
+                        else if(i == 2) {
+                            weight = x;
+                        }
+                        i++;
+                    }
+                    addEdge(from,to,weight);
+                    sc.close();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Method that return an augmenting path of this FlowNetwork. The algorithm is to take random edges.
+     * @return the augmenting path
+     */
+    public List<Node> augmentingPathRandom(){
         //TODO
+        return null;
+    }
+
+    /**
+     * Method that return an augmenting path of this FlowNetwork. The algorithm is to make a Deep-First-Search.
+     * @return the augmenting path
+     */
+    public List<Node> augmentingPathDFS(){
+        //TODO
+        return null;
+    }
+
+    /**
+     * Method that return an augmenting path of this FlowNetwork. The algorithm is to make a Breadth-First-Search.
+     * @return the augmenting path
+     */
+    public List<Node> augmentingPathBFS(){
+        //TODO
+        return null;
     }
 
     /**
