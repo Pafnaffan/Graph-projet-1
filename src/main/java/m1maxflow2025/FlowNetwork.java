@@ -5,10 +5,7 @@ import m1graphs2025.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class FlowNetwork extends Graph {
 
@@ -20,42 +17,83 @@ public class FlowNetwork extends Graph {
      * @param file the path of the DOT file
      */
     public FlowNetwork(String file){
+        int max = 0;
+        ArrayList<String> nodelist = new ArrayList<>();
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String ligne;
+
+            String ligne = br.readLine();
+            Scanner scName = new Scanner(ligne);
+            scName.next();
+            name = scName.next();
+
             while ((ligne = br.readLine()) != null) {
-                if (ligne.matches(".*\\d+.*")) {
-                    System.out.println(ligne); //
-                    Scanner sc = new Scanner(ligne);
-                    sc.useDelimiter("\\D+");
-                    int i = 0;
-                    Node from = null;
-                    Node to = null;
-                    Integer weight = null;
-                    while (sc.hasNextInt()) {
-                        int x = sc.nextInt();
-                        System.out.println(x);
-                        if(i == 0){
-                            from = getNode(x);
-                            if(from == null){
-                                from = new Node(x,this);
-                                addNode(from);
-                            }
-                        }
-                        else if(i == 1) {
-                            to = getNode(x);
-                            if(to == null){
-                                to = new Node(x,this);
-                                addNode(to);
-                            }
-                        }
-                        else if(i == 2) {
-                            weight = x;
+                Scanner sc = new Scanner(ligne);
+                sc.useDelimiter("");
+                int i = 0;
+                while (sc.hasNext()) {
+                    String x = sc.next();
+                    if(i < 2 && (x.equals("s") || x.matches("[0-9]+") || x.equals("t"))){
+                        if(!nodelist.contains(x)) {
+                            nodelist.add(x);
                         }
                         i++;
                     }
-                    addEdge(from,to,weight);
-                    sc.close();
                 }
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        max = nodelist.size();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String ligne = br.readLine();
+            while ((ligne = br.readLine()) != null) {
+                Scanner sc = new Scanner(ligne);
+                sc.useDelimiter("");
+                int i = 0;
+                Node from = null;
+                Node to = null;
+                Integer weight = null;
+                while (sc.hasNext()) {
+                    String x = sc.next();
+                    int id = -1;
+                    if(x.equals("s")){
+                        id = 1;
+                    }
+                    else if(x.matches("[0-9]+")){
+                        if(i<2){
+                            id = Integer.parseInt(x)+1;
+                        } else {
+                            id = Integer.parseInt(x);
+                        }
+                    }
+                    else if(x.equals("t")){
+                        id = max;
+                    }
+                    if(id != -1){
+                        if (i == 0) {
+                            from = getNode(id);
+                            if (from == null) {
+                                from = new Node(id, this,x);
+                                addNode(from);
+                            }
+                        } else if (i == 1) {
+                            to = getNode(id);
+                            if (to == null) {
+                                to = new Node(id, this,x);
+                                addNode(to);
+                            }
+                        } else if (i == 2) {
+                            weight = id;
+                        }
+                        i++;
+                    }
+                }
+                addEdge(from,to,weight);
+                sc.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
