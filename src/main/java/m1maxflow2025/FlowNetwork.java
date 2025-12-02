@@ -57,39 +57,64 @@ public class FlowNetwork extends Graph {
                 Node from = null;
                 Node to = null;
                 Integer weight = null;
+                int id = -1;
                 while (sc.hasNext()) {
                     String x = sc.next();
-                    int id = -1;
                     if(x.equals("s")){
-                        id = 1;
+                        id = 0;
                     }
                     else if(x.matches("[0-9]+")){
-                        if(i<2){
-                            id = Integer.parseInt(x)+1;
-                        } else {
-                            id = Integer.parseInt(x);
+                        if(id < 0){
+                            id = 0;
                         }
+                        id = (id*10) + Integer.parseInt(x);
                     }
                     else if(x.equals("t")){
-                        id = max;
+                        id = max-1;
                     }
-                    if(id != -1){
-                        if (i == 0) {
-                            from = getNode(id);
-                            if (from == null) {
-                                from = new Node(id, this,x);
-                                addNode(from);
+                    else{
+                        if(id >= 0) {
+                            String nodeName;
+                            if (i == 0) {
+                                id++;
+                                from = getNode(id);
+                                if (from == null) {
+                                    if(id == 1){
+                                        nodeName = "s";
+                                    }
+                                    else if(id == max){
+                                        nodeName = "t";
+                                    }
+                                    else{
+                                        int y = id-1;
+                                        nodeName = Integer.toString(y);
+                                    }
+                                    from = new Node(id, this, nodeName);
+                                    addNode(from);
+                                }
+                            } else if (i == 1) {
+                                id++;
+                                to = getNode(id);
+                                if (to == null) {
+                                    if(id == 1){
+                                        nodeName = "s";
+                                    }
+                                    else if(id == max){
+                                        nodeName = "t";
+                                    }
+                                    else{
+                                        int y = id-1;
+                                        nodeName = Integer.toString(y);
+                                    }
+                                    to = new Node(id, this, nodeName);
+                                    addNode(to);
+                                }
+                            } else if (i == 2) {
+                                weight = id;
                             }
-                        } else if (i == 1) {
-                            to = getNode(id);
-                            if (to == null) {
-                                to = new Node(id, this,x);
-                                addNode(to);
-                            }
-                        } else if (i == 2) {
-                            weight = id;
+                            id = -1;
+                            i++;
                         }
-                        i++;
                     }
                 }
                 addEdge(from,to,weight);
