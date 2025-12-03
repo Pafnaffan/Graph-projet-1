@@ -130,8 +130,20 @@ public class FlowNetwork extends Graph {
      * @return the augmenting path
      */
     public List<Node> augmentingPathRandom(){
-        //TODO
-        return null;
+        ArrayList<Node> augmentingPath = new ArrayList<>();
+        Random random = new Random();
+        augmentingPath.add(getNode(1));
+        List<Edge> nList = getOutEdges(getNode(1));
+        Node n = nList.get(random.nextInt(nList.size())).to();
+        augmentingPath.add(n);
+        while (!Objects.equals(n.getName(), "t")){
+            nList = getOutEdges(n);
+            do {
+                n = nList.get(random.nextInt(nList.size())).to();
+            } while(!augmentingPath.contains(n));
+            augmentingPath.add(n);
+        }
+        return augmentingPath;
     }
 
     /**
@@ -139,8 +151,9 @@ public class FlowNetwork extends Graph {
      * @return the augmenting path
      */
     public List<Node> augmentingPathDFS(){
+        ArrayList<Node> augmentingPath = new ArrayList<>();
         //TODO
-        return null;
+        return augmentingPath;
     }
 
     /**
@@ -148,8 +161,9 @@ public class FlowNetwork extends Graph {
      * @return the augmenting path
      */
     public List<Node> augmentingPathBFS(){
+        ArrayList<Node> augmentingPath = new ArrayList<>();
         //TODO
-        return null;
+        return augmentingPath;
     }
 
     /**
@@ -157,8 +171,19 @@ public class FlowNetwork extends Graph {
      * @return the residual network
      */
     public FlowNetwork computeResidualNetwork(){
-        //TODO
-        return null;
+        FlowNetwork residualNetwork = copy();
+        for(Edge e : residualNetwork.getAllEdges()){
+            int actualFlow = residualNetwork.getFlow(e);
+            if(actualFlow != 0){
+                int diff = e.getWeight() - residualNetwork.getFlow(e);
+                residualNetwork.addEdge(e.to(),e.from(),actualFlow);
+                residualNetwork.removeEdge(e);
+                if(diff != 0) {
+                    residualNetwork.addEdge(e.from(),e.to(),diff);
+                }
+            }
+        }
+        return residualNetwork;
     }
 
     /**
