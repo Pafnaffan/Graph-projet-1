@@ -3,6 +3,7 @@ package m1maxflow2025;
 import m1graphs2025.*;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -19,107 +20,143 @@ public class FlowNetwork extends Graph {
     public FlowNetwork(String file){
         int max = 0;
         ArrayList<String> nodelist = new ArrayList<>();
+        Integer id1 = -1;
+        Integer id2 = -1;
+        int weight = -1;
+        boolean needLetter = false;
+        int sid = -1;
+        int tid = -1;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String ligne = br.readLine();
+            while ((ligne = br.readLine()) != null) {
+                Scanner scNumber = new Scanner(ligne);
+                scNumber.useDelimiter("[^a-zA-Z0-9]+");
+                id1 = -1;
+                id2 = -1;
+                weight = -1;
+                while (scNumber.hasNext()) {
+                    String x = scNumber.next();
+                    if(x.matches("[0-9]+")){
+                        if(id1 == -1){
+                            id1 = Integer.parseInt(x);
+                        }
+                        else if(id2 == -1){
+                            id2 = Integer.parseInt(x);
+                        }
+                    }
+                    if(x.equals("label")){
+                        if(id2 == -1){
+                            needLetter = true;
+                        }
+                    }
+                    if(x.equals("s")){
+                        if(needLetter){
+                            sid = id1;
+                            needLetter = false;
+                        }
+                        if(id1 == -1){
+                            id1 = 0;
+                        }
+                        if(id2 == -1){
+                            id2 = 0;
+                        }
+                    }
+                    if(x.equals("t")){
+                        if(needLetter){
+                            tid = id1;
+                            needLetter = false;
+                        }
+                        if(id1 == -1){
+                            id1 = 0;
+                        }
+                        if(id2 == -1){
+                            id2 = 0;
+                        }
+                    }
+                }
+                if(id1 > max){
+                    max = id1;
+                }
+                if(id2 > max){
+                    max = id2;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        if(sid == -1){
+            sid = 1;
+        }
+        if(tid == -1){
+            tid = max+1;
+        }
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 
             String ligne = br.readLine();
             Scanner scName = new Scanner(ligne);
             scName.next();
-            name = scName.next();
-
-            while ((ligne = br.readLine()) != null) {
-                Scanner sc = new Scanner(ligne);
-                sc.useDelimiter("");
-                int i = 0;
-                while (sc.hasNext()) {
-                    String x = sc.next();
-                    if(i < 2 && (x.equals("s") || x.matches("[0-9]+") || x.equals("t"))){
-                        if(!nodelist.contains(x)) {
-                            nodelist.add(x);
-                        }
-                        i++;
-                    }
-                }
+            String testName = scName.next();
+            if(!Objects.equals(testName, "{")){
+                name = testName;
             }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        max = nodelist.size();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String ligne = br.readLine();
             while ((ligne = br.readLine()) != null) {
                 Scanner sc = new Scanner(ligne);
-                sc.useDelimiter("");
-                int i = 0;
-                Node from = null;
-                Node to = null;
-                Integer weight = null;
-                int id = -1;
+                sc.useDelimiter("[^a-zA-Z0-9]+");
+                id1 = -1;
+                id2 = -1;
+                weight = -1;
                 while (sc.hasNext()) {
                     String x = sc.next();
+                    if(x.matches("[0-9]+")){
+                        if(id1 == -1){
+                            id1 = Integer.parseInt(x);
+                        }
+                        else if(id2 == -1){
+                            id2 = Integer.parseInt(x);
+                        }
+                        else {
+                            weight = Integer.parseInt(x);
+                        }
+                    }
                     if(x.equals("s")){
-                        id = 0;
-                    }
-                    else if(x.matches("[0-9]+")){
-                        if(id < 0){
-                            id = 0;
+                        if(id1 == -1){
+                            id1 = sid;
                         }
-                        id = (id*10) + Integer.parseInt(x);
+                        else if (id2 == -1){
+                            id2 = sid;
+                        }
                     }
-                    else if(x.equals("t")){
-                        id = max-1;
-                    }
-                    else{
-                        if(id >= 0) {
-                            String nodeName;
-                            if (i == 0) {
-                                id++;
-                                from = getNode(id);
-                                if (from == null) {
-                                    if(id == 1){
-                                        nodeName = "s";
-                                    }
-                                    else if(id == max){
-                                        nodeName = "t";
-                                    }
-                                    else{
-                                        int y = id-1;
-                                        nodeName = Integer.toString(y);
-                                    }
-                                    from = new Node(id, this, nodeName);
-                                    addNode(from);
-                                }
-                            } else if (i == 1) {
-                                id++;
-                                to = getNode(id);
-                                if (to == null) {
-                                    if(id == 1){
-                                        nodeName = "s";
-                                    }
-                                    else if(id == max){
-                                        nodeName = "t";
-                                    }
-                                    else{
-                                        int y = id-1;
-                                        nodeName = Integer.toString(y);
-                                    }
-                                    to = new Node(id, this, nodeName);
-                                    addNode(to);
-                                }
-                            } else if (i == 2) {
-                                weight = id;
-                            }
-                            id = -1;
-                            i++;
+                    if(x.equals("t")){
+                        if(id1 == -1){
+                            id1 = tid;
+                        }
+                        else if (id2 == -1){
+                            id2 = tid;
                         }
                     }
                 }
-                addEdge(from,to,weight);
-                sc.close();
+                if(id1 != -1 && id2 != -1 && weight != -1){
+                    Node from = getNode(id1);
+                    if(from == null){
+                        from = new Node(id1,this,(id1 == sid)? "s" : (id1 == tid)? "t" : id1.toString());
+                        addNode(from);
+                    }
+                    Node to = getNode(id2);
+                    if(to == null){
+                        to = new Node(id2,this,(id2 == sid)? "s" : (id2 == tid)? "t" : id2.toString());
+                        addNode(to);
+                    }
+                    addEdge(from,to,weight);
+                }
             }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
         } catch (IOException e) {
             e.printStackTrace();
         }
