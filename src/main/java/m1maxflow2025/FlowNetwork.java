@@ -188,20 +188,98 @@ public class FlowNetwork extends Graph {
      * @return the augmenting path
      */
     public List<Node> augmentingPathDFS(){
-        ArrayList<Node> augmentingPath = new ArrayList<>();
-        //TODO
-        return augmentingPath;
+        FlowNetwork residual = computeResidualNetwork();
+
+        Node source = null;
+        Node sink = null;
+        for (Node n : residual.getAllNodes()) {
+            if ("s".equals(n.getName())) source = n;
+            if ("t".equals(n.getName())) sink = n;
+        }
+        if (source == null || sink == null) return new ArrayList<>();
+
+        Map<Node, Node> parent = new HashMap<>();
+        parent.put(source, null); // mark source as visited
+
+        if (dfsSearch(residual, source, sink, parent)) {
+            LinkedList<Node> path = new LinkedList<>();
+            Node current = sink;
+            while (current != null) {
+                path.addFirst(current);
+                current = parent.get(current);
+            }
+            return path;
+        }
+        return new ArrayList<>();
     }
+
+    private boolean dfsSearch(FlowNetwork residual, Node current, Node sink, Map<Node, Node> parent){
+        if (current.equals(sink)) return true;
+
+        for (Edge e : residual.getOutEdges(current)) {
+            Node next = e.to();
+            if (!parent.containsKey(next)) {
+                parent.put(next, current);
+                if (dfsSearch(residual, next, sink, parent)) return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Method that return an augmenting path of this FlowNetwork. The algorithm is to make a Breadth-First-Search.
      * @return the augmenting path
      */
-    public List<Node> augmentingPathBFS(){
-        ArrayList<Node> augmentingPath = new ArrayList<>();
-        //TODO
-        return augmentingPath;
+    public List<Node> augmentingPathBFS() {
+        FlowNetwork residual = computeResidualNetwork();
+
+        Node source = null;
+        Node sink = null;
+
+        // detect s and t
+        for (Node n : residual.getAllNodes()) {
+            if ("s".equals(n.getName())) source = n;
+            if ("t".equals(n.getName())) sink = n;
+        }
+        if (source == null || sink == null) return new ArrayList<>();
+
+        Queue<Node> queue = new LinkedList<>();
+        Map<Node, Node> parent = new HashMap<>();
+
+        queue.add(source);
+        parent.put(source, null);   // mark source as visited
+
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+
+            // if we reached t → stop early
+            if (current.equals(sink)) break;
+
+            for (Edge e : residual.getOutEdges(current)) {
+                Node next = e.to();
+                if (!parent.containsKey(next)) {
+                    parent.put(next, current);
+                    queue.add(next);
+                }
+            }
+        }
+
+        // If sink has no parent → no augmenting path exists
+        if (!parent.containsKey(sink))
+            return new ArrayList<>();
+
+        // Reconstruct path
+        LinkedList<Node> path = new LinkedList<>();
+        Node n = sink;
+        while (n != null) {
+            path.addFirst(n);
+            n = parent.get(n);
+        }
+
+        return path;
     }
+
 
     /**
      * Method that create a residual network from the actual flow of the FlowNetwork
@@ -226,9 +304,73 @@ public class FlowNetwork extends Graph {
     /**
      * Method that compute the maximum flow in this FlowNetwork by using the Ford-Fulkerson method
      */
-    public void fordFulkerson(){
-        //TODO
+    public void fordFulkerson() {
+        // 1) initialize all flows to zero
+        flow = new HashMap<>();
+        for (Edge e : getAllEdges()) {
+            flow.put(e, 0);
+        }
+
+        while (true) {
+
+            // 2) build residual network
+            FlowNetwork residual = computeResidualNetwork();
+
+            // 3) get augmenting path
+            List<Node> path = residual.augmentingPathBFS();
+
+            if (path.isEmpty()) {
+                break; // no more augmenting paths
+            }
+
+            // 4) bottleneck
+            int bottle = Integer.MAX_VALUE;
+
+            for (int i = 0; i < path.size() - 1; i++) {
+                Node u = path.get(i);
+                Node v = path.get(i + 1);
+
+                List<Edge> forwardEdges = getEdges(u, v);
+                List<Edge> backwardEdges = getEdges(v, u);
+
+                Edge forward = forwardEdges.isEmpty() ? null : forwardEdges.get(0);
+                Edge backward = backwardEdges.isEmpty() ? null : backwardEdges.get(0);
+
+                if (forward != null) {
+                    // forward edge: capacity - flow
+                    int residualCap = forward.getWeight() - flow.get(forward);
+                    bottle = Math.min(bottle, residualCap);
+                } else if (backward != null) {
+                    // backward edge: flow
+                    int residualCap = flow.get(backward);
+                    bottle = Math.min(bottle, residualCap);
+                } else {
+                    throw new RuntimeException("Residual path edge not found in original graph.");
+                }
+            }
+
+            // 5) push flow along path
+            for (int i = 0; i < path.size() - 1; i++) {
+                Node u = path.get(i);
+                Node v = path.get(i + 1);
+
+                List<Edge> forwardEdges = getEdges(u, v);
+                List<Edge> backwardEdges = getEdges(v, u);
+
+                Edge forward = forwardEdges.isEmpty() ? null : forwardEdges.get(0);
+                Edge backward = backwardEdges.isEmpty() ? null : backwardEdges.get(0);
+
+                if (forward != null) {
+                    // forward augmentation
+                    flow.put(forward, flow.get(forward) + bottle);
+                } else {
+                    // backward augmentation (reduce flow)
+                    flow.put(backward, flow.get(backward) - bottle);
+                }
+            }
+        }
     }
+
 
     /**
      * Method that add a flow value for the Edge e
