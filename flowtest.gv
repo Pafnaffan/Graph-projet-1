@@ -5,7 +5,7 @@ digraph flowNetwork {
     2->4 [label=6,len=6]
     3->4 [label=10,len=10]
     3->5 [label=7,len=7]
-    4->5 [label=32,len=32]
+    4->5 [label=3,len=3]
     4->t [label=4,len=4]
     5->t [label=6,len=6]
 }

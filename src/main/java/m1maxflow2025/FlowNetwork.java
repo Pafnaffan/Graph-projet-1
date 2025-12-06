@@ -11,7 +11,12 @@ import java.util.*;
 public class FlowNetwork extends Graph {
 
     String name;
-    Map<Edge,Integer> flow;
+    HashMap<Edge,Integer> flow = new HashMap<>();
+
+    /**
+     * Constructor that create this empty FlowNetwork
+     */
+    public FlowNetwork(){}
 
     /**
      * Constructor that create this FlowNetwork with a DOT file
@@ -152,7 +157,9 @@ public class FlowNetwork extends Graph {
                         to = new Node(id2,this,(id2 == sid)? "s" : (id2 == tid)? "t" : id2.toString());
                         addNode(to);
                     }
-                    addEdge(from,to,weight);
+                    Edge edge = new Edge(from,to,weight);
+                    addEdge(edge);
+                    addFlow(edge,0);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -188,20 +195,16 @@ public class FlowNetwork extends Graph {
      * @return the augmenting path
      */
     public List<Node> augmentingPathDFS(){
-        FlowNetwork residual = computeResidualNetwork();
-
         Node source = null;
         Node sink = null;
-        for (Node n : residual.getAllNodes()) {
+        for (Node n : getAllNodes()) {
             if ("s".equals(n.getName())) source = n;
             if ("t".equals(n.getName())) sink = n;
         }
         if (source == null || sink == null) return new ArrayList<>();
-
         Map<Node, Node> parent = new HashMap<>();
-        parent.put(source, null); // mark source as visited
-
-        if (dfsSearch(residual, source, sink, parent)) {
+        parent.put(source, null);
+        if (dfsSearch(source, sink, parent)) {
             LinkedList<Node> path = new LinkedList<>();
             Node current = sink;
             while (current != null) {
@@ -213,14 +216,13 @@ public class FlowNetwork extends Graph {
         return new ArrayList<>();
     }
 
-    private boolean dfsSearch(FlowNetwork residual, Node current, Node sink, Map<Node, Node> parent){
+    private boolean dfsSearch(Node current, Node sink, Map<Node, Node> parent){
         if (current.equals(sink)) return true;
-
-        for (Edge e : residual.getOutEdges(current)) {
+        for (Edge e : getOutEdges(current)) {
             Node next = e.to();
             if (!parent.containsKey(next)) {
                 parent.put(next, current);
-                if (dfsSearch(residual, next, sink, parent)) return true;
+                if (dfsSearch(next, sink, parent)) return true;
             }
         }
         return false;
@@ -232,31 +234,21 @@ public class FlowNetwork extends Graph {
      * @return the augmenting path
      */
     public List<Node> augmentingPathBFS() {
-        FlowNetwork residual = computeResidualNetwork();
-
         Node source = null;
         Node sink = null;
-
-        // detect s and t
-        for (Node n : residual.getAllNodes()) {
+        for (Node n : getAllNodes()) {
             if ("s".equals(n.getName())) source = n;
             if ("t".equals(n.getName())) sink = n;
         }
         if (source == null || sink == null) return new ArrayList<>();
-
         Queue<Node> queue = new LinkedList<>();
         Map<Node, Node> parent = new HashMap<>();
-
         queue.add(source);
-        parent.put(source, null);   // mark source as visited
-
+        parent.put(source, null);
         while (!queue.isEmpty()) {
             Node current = queue.poll();
-
-            // if we reached t → stop early
             if (current.equals(sink)) break;
-
-            for (Edge e : residual.getOutEdges(current)) {
+            for (Edge e : getOutEdges(current)) {
                 Node next = e.to();
                 if (!parent.containsKey(next)) {
                     parent.put(next, current);
@@ -264,22 +256,15 @@ public class FlowNetwork extends Graph {
                 }
             }
         }
-
-        // If sink has no parent → no augmenting path exists
-        if (!parent.containsKey(sink))
-            return new ArrayList<>();
-
-        // Reconstruct path
+        if (!parent.containsKey(sink)) return new ArrayList<>();
         LinkedList<Node> path = new LinkedList<>();
         Node n = sink;
         while (n != null) {
             path.addFirst(n);
             n = parent.get(n);
         }
-
         return path;
     }
-
 
     /**
      * Method that create a residual network from the actual flow of the FlowNetwork
@@ -305,67 +290,50 @@ public class FlowNetwork extends Graph {
      * Method that compute the maximum flow in this FlowNetwork by using the Ford-Fulkerson method
      */
     public void fordFulkerson() {
-        // 1) initialize all flows to zero
-        flow = new HashMap<>();
-        for (Edge e : getAllEdges()) {
-            flow.put(e, 0);
-        }
-
         while (true) {
-
-            // 2) build residual network
             FlowNetwork residual = computeResidualNetwork();
-
-            // 3) get augmenting path
             List<Node> path = residual.augmentingPathBFS();
-
             if (path.isEmpty()) {
-                break; // no more augmenting paths
+                break;
             }
-
-            // 4) bottleneck
             int bottle = Integer.MAX_VALUE;
+
+            System.out.println(residual);
+            System.out.println(path);
 
             for (int i = 0; i < path.size() - 1; i++) {
                 Node u = path.get(i);
                 Node v = path.get(i + 1);
 
-                List<Edge> forwardEdges = getEdges(u, v);
-                List<Edge> backwardEdges = getEdges(v, u);
+                System.out.println("u = "+u);
+                System.out.println("v = "+v);
 
-                Edge forward = forwardEdges.isEmpty() ? null : forwardEdges.get(0);
-                Edge backward = backwardEdges.isEmpty() ? null : backwardEdges.get(0);
+                List<Edge> forwardEdges = residual.getEdges(u.getId(), v.getId());
+                System.out.println("forwardEdges = "+forwardEdges);
 
+                Edge forward = (forwardEdges == null || forwardEdges.isEmpty()) ? null : forwardEdges.get(0);
                 if (forward != null) {
-                    // forward edge: capacity - flow
-                    int residualCap = forward.getWeight() - flow.get(forward);
-                    bottle = Math.min(bottle, residualCap);
-                } else if (backward != null) {
-                    // backward edge: flow
-                    int residualCap = flow.get(backward);
+                    int residualCap = forward.getWeight();
                     bottle = Math.min(bottle, residualCap);
                 } else {
                     throw new RuntimeException("Residual path edge not found in original graph.");
                 }
             }
-
-            // 5) push flow along path
+            System.out.println("bottle = "+bottle);
             for (int i = 0; i < path.size() - 1; i++) {
                 Node u = path.get(i);
                 Node v = path.get(i + 1);
 
-                List<Edge> forwardEdges = getEdges(u, v);
-                List<Edge> backwardEdges = getEdges(v, u);
+                List<Edge> forwardEdges = getEdges(u.getId(), v.getId());
+                List<Edge> backwardEdges = getEdges(v.getId(), u.getId());
 
                 Edge forward = forwardEdges.isEmpty() ? null : forwardEdges.get(0);
                 Edge backward = backwardEdges.isEmpty() ? null : backwardEdges.get(0);
 
                 if (forward != null) {
-                    // forward augmentation
-                    flow.put(forward, flow.get(forward) + bottle);
+                    editFlow(forward, flow.get(forward) + bottle);
                 } else {
-                    // backward augmentation (reduce flow)
-                    flow.put(backward, flow.get(backward) - bottle);
+                    editFlow(backward, flow.get(backward) - bottle);
                 }
             }
         }
@@ -399,6 +367,19 @@ public class FlowNetwork extends Graph {
     }
 
     /**
+     * Method that permit to edit the flow value of the Edge e
+     * @param e the Edge
+     * @param i the new flow value of the Edge e
+     * @return true if the flow value has been edited, otherwise false
+     */
+    public boolean editFlow(Edge e, int i){
+        if(e != null && flow.containsKey(e)){
+            return flow.put(e,i) != null;
+        }
+        return false;
+    }
+
+    /**
      * Method that remove the Edge e and his flow to the Map
      * @return true if it's removed, otherwise false
      */
@@ -414,11 +395,16 @@ public class FlowNetwork extends Graph {
      * @return a copy of the FlowNetwork
      */
     public FlowNetwork copy() {
-         FlowNetwork copy = (FlowNetwork) super.copy();
-         for(Edge e : flow.keySet()){
-            copy.addFlow(e,flow.get(e));
-         }
-         return copy;
+        FlowNetwork copy = new FlowNetwork();
+        for(Node n : getAllNodes()){
+            copy.addNode(new Node(n.getId(),copy,n.getName()));
+        }
+        for (Edge e : getAllEdges()){
+            Edge newEdge = new Edge(e.from().getId(),e.to().getId(),e.getWeight(),copy);
+            copy.addEdge(newEdge);
+            copy.addFlow(newEdge,flow.get(e));
+        }
+        return copy;
     }
 
     /**
@@ -436,7 +422,7 @@ public class FlowNetwork extends Graph {
             if(getIncidentEdges(n).isEmpty()){
                 sb.append("\t").append(n).append("\n");
             } else {
-                List<Edge> el = adjEdList.get(n);
+                List<Edge> el = getOutEdges(n);
                 Collections.sort(el);
                 for (Edge e : el) {
                     sb.append("\t").append(e.from().getName()).append(" -> ").append(e.to().getName());
@@ -444,6 +430,36 @@ public class FlowNetwork extends Graph {
                         sb.append(" [label=").append(e.getWeight()).append(", len=").append(e.getWeight()).append("]");
                     }
                     sb.append("\n");
+                }
+            }
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+
+    /**
+     * Method that return a String of this FlowNetwork with a good form to see the flow
+     * @return a String of this FlowNetwork with a good form to see the flow
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph "+((name != null) ? name : "")+" {\n");
+        sb.append("\trankdir=LR\n");
+        List<Node> nl = getAllNodes();
+        Collections.sort(nl);
+        for (Node n : nl) {
+            if(getIncidentEdges(n).isEmpty()){
+                sb.append("\t").append(n).append("\n");
+            } else {
+                List<Edge> el = getOutEdges(n);
+                Collections.sort(el);
+                for (Edge e : el) {
+                    sb.append("\t").append(e.from().getName()).append(" - ");
+                    if(e.isWeighted()){
+                        sb.append(getFlow(e)).append("/").append(e.getWeight());
+                    }
+                    sb.append(" -> ").append(e.to().getName()).append("\n");
                 }
             }
         }
