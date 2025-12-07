@@ -9,6 +9,6 @@ public class TestFlow {
         System.out.println("                The Max Flow            ");
         System.out.println("////////////////////////////////////////");
         fn.fordFulkerson();
-        System.out.println(fn);
+        System.out.println(fn.toDotString());
     }
 }

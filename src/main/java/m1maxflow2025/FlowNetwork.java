@@ -10,8 +10,8 @@ import java.util.*;
 
 public class FlowNetwork extends Graph {
 
-    String name;
-    HashMap<Edge,Integer> flow = new HashMap<>();
+    private String name;
+    private HashMap<Edge,Integer> flow = new HashMap<>();
 
     /**
      * Constructor that create this empty FlowNetwork
@@ -170,6 +170,22 @@ public class FlowNetwork extends Graph {
     }
 
     /**
+     * Method change the name of this FlowNetwork
+     * @param name the new name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Method that return the name of this FlowNetwork
+     * @return the name of this FlowNetwork
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * Method that return an augmenting path of this FlowNetwork. The algorithm is to take random edges.
      * @return the augmenting path
      */
@@ -182,9 +198,13 @@ public class FlowNetwork extends Graph {
         augmentingPath.add(n);
         while (!Objects.equals(n.getName(), "t")){
             nList = getOutEdges(n);
+            List<Node> visited = new ArrayList<>();
             do {
                 n = nList.get(random.nextInt(nList.size())).to();
-            } while(!augmentingPath.contains(n));
+                if(!visited.contains(n)){
+                    visited.add(n);
+                }
+            } while(!augmentingPath.contains(n) && visited.size() < nList.size());
             augmentingPath.add(n);
         }
         return augmentingPath;
@@ -276,10 +296,15 @@ public class FlowNetwork extends Graph {
             int actualFlow = residualNetwork.getFlow(e);
             if(actualFlow != 0){
                 int diff = e.getWeight() - residualNetwork.getFlow(e);
-                residualNetwork.addEdge(e.to(),e.from(),actualFlow);
+                Edge reverseEdge = new Edge(e.to(),e.from(),actualFlow);
+                residualNetwork.addEdge(reverseEdge);
+                residualNetwork.addFlow(reverseEdge,0);
                 residualNetwork.removeEdge(e);
+                residualNetwork.removeFlow(e);
                 if(diff != 0) {
-                    residualNetwork.addEdge(e.from(),e.to(),diff);
+                    Edge prevEdge = new Edge(e.from(),e.to(),diff);
+                    residualNetwork.addEdge(prevEdge);
+                    residualNetwork.addFlow(prevEdge,0);
                 }
             }
         }
@@ -292,25 +317,15 @@ public class FlowNetwork extends Graph {
     public void fordFulkerson() {
         while (true) {
             FlowNetwork residual = computeResidualNetwork();
-            List<Node> path = residual.augmentingPathBFS();
+            List<Node> path = residual.augmentingPathDFS();
             if (path.isEmpty()) {
                 break;
             }
             int bottle = Integer.MAX_VALUE;
-
-            System.out.println(residual);
-            System.out.println(path);
-
             for (int i = 0; i < path.size() - 1; i++) {
                 Node u = path.get(i);
                 Node v = path.get(i + 1);
-
-                System.out.println("u = "+u);
-                System.out.println("v = "+v);
-
                 List<Edge> forwardEdges = residual.getEdges(u.getId(), v.getId());
-                System.out.println("forwardEdges = "+forwardEdges);
-
                 Edge forward = (forwardEdges == null || forwardEdges.isEmpty()) ? null : forwardEdges.get(0);
                 if (forward != null) {
                     int residualCap = forward.getWeight();
@@ -319,17 +334,13 @@ public class FlowNetwork extends Graph {
                     throw new RuntimeException("Residual path edge not found in original graph.");
                 }
             }
-            System.out.println("bottle = "+bottle);
             for (int i = 0; i < path.size() - 1; i++) {
                 Node u = path.get(i);
                 Node v = path.get(i + 1);
-
                 List<Edge> forwardEdges = getEdges(u.getId(), v.getId());
                 List<Edge> backwardEdges = getEdges(v.getId(), u.getId());
-
                 Edge forward = forwardEdges.isEmpty() ? null : forwardEdges.get(0);
                 Edge backward = backwardEdges.isEmpty() ? null : backwardEdges.get(0);
-
                 if (forward != null) {
                     editFlow(forward, flow.get(forward) + bottle);
                 } else {
@@ -338,7 +349,6 @@ public class FlowNetwork extends Graph {
             }
         }
     }
-
 
     /**
      * Method that add a flow value for the Edge e
@@ -396,6 +406,7 @@ public class FlowNetwork extends Graph {
      */
     public FlowNetwork copy() {
         FlowNetwork copy = new FlowNetwork();
+        copy.setName(getName());
         for(Node n : getAllNodes()){
             copy.addNode(new Node(n.getId(),copy,n.getName()));
         }
@@ -426,40 +437,18 @@ public class FlowNetwork extends Graph {
                 Collections.sort(el);
                 for (Edge e : el) {
                     sb.append("\t").append(e.from().getName()).append(" -> ").append(e.to().getName());
-                    if(e.isWeighted()){
-                        sb.append(" [label=").append(e.getWeight()).append(", len=").append(e.getWeight()).append("]");
+                    if(e.isWeighted()) {
+                        sb.append(" [label=");
+                        if(getFlow(e) != 0) {
+                            sb.append("\"").append(getFlow(e)).append("/");
+                        }
+                        sb.append(e.getWeight());
+                        if(getFlow(e) != 0){
+                            sb.append("\"");
+                        }
+                        sb.append(", len=").append(e.getWeight()).append("]");
                     }
                     sb.append("\n");
-                }
-            }
-        }
-        sb.append("}");
-        return sb.toString();
-    }
-
-    /**
-     * Method that return a String of this FlowNetwork with a good form to see the flow
-     * @return a String of this FlowNetwork with a good form to see the flow
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("digraph "+((name != null) ? name : "")+" {\n");
-        sb.append("\trankdir=LR\n");
-        List<Node> nl = getAllNodes();
-        Collections.sort(nl);
-        for (Node n : nl) {
-            if(getIncidentEdges(n).isEmpty()){
-                sb.append("\t").append(n).append("\n");
-            } else {
-                List<Edge> el = getOutEdges(n);
-                Collections.sort(el);
-                for (Edge e : el) {
-                    sb.append("\t").append(e.from().getName()).append(" - ");
-                    if(e.isWeighted()){
-                        sb.append(getFlow(e)).append("/").append(e.getWeight());
-                    }
-                    sb.append(" -> ").append(e.to().getName()).append("\n");
                 }
             }
         }
