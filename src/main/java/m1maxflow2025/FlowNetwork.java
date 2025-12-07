@@ -186,31 +186,6 @@ public class FlowNetwork extends Graph {
     }
 
     /**
-     * Method that return an augmenting path of this FlowNetwork. The algorithm is to take random edges.
-     * @return the augmenting path
-     */
-    public List<Node> augmentingPathRandom(){
-        ArrayList<Node> augmentingPath = new ArrayList<>();
-        Random random = new Random();
-        augmentingPath.add(getNode(1));
-        List<Edge> nList = getOutEdges(getNode(1));
-        Node n = nList.get(random.nextInt(nList.size())).to();
-        augmentingPath.add(n);
-        while (!Objects.equals(n.getName(), "t")){
-            nList = getOutEdges(n);
-            List<Node> visited = new ArrayList<>();
-            do {
-                n = nList.get(random.nextInt(nList.size())).to();
-                if(!visited.contains(n)){
-                    visited.add(n);
-                }
-            } while(!augmentingPath.contains(n) && visited.size() < nList.size());
-            augmentingPath.add(n);
-        }
-        return augmentingPath;
-    }
-
-    /**
      * Method that return an augmenting path of this FlowNetwork. The algorithm is to make a Deep-First-Search.
      * @return the augmenting path
      */
@@ -317,29 +292,24 @@ public class FlowNetwork extends Graph {
     public void fordFulkerson() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Which algorithm would you like to use for the augmenting path? : ");
-        System.out.println("(1) Random Search");
-        System.out.println("(2) Breadth-First-Search");
-        System.out.println("(3) Deep-First-Search");
+        System.out.println("(1) Breadth-First-Search");
+        System.out.println("(2) Deep-First-Search");
         int algo = scanner.nextInt();
         while (true) {
             FlowNetwork residual = computeResidualNetwork();
-            System.out.println("Residual Network :");
+            System.out.println("\nResidual Network :");
             System.out.println(residual.toDotString());
             List<Node> path = null;
-            if(algo == 1){
-                path = residual.augmentingPathRandom();
-            }
-            else if (algo == 2){
+            if (algo == 1){
                 path = residual.augmentingPathBFS();
             }
-            else if (algo == 3){
+            else if (algo == 2){
                 path = residual.augmentingPathDFS();
             }
             else {
                 throw new RuntimeException("Invalid selection.");
             }
-            System.out.println("Augmenting Path :");
-            System.out.println(path);
+            System.out.println("\nAugmenting Path : "+path);
             if (path.isEmpty()) {
                 break;
             }
@@ -369,9 +339,23 @@ public class FlowNetwork extends Graph {
                     editFlow(backward, flow.get(backward) - bottle);
                 }
             }
-            System.out.println("Flow Induced :");
+            System.out.println("\nFlow Induced :");
             System.out.println(toDotString());
         }
+        Node terminus = null;
+        for(Node n : getAllNodes()){
+            if(Objects.equals(n.getName(), "t")){
+                terminus = n;
+                break;
+            }
+        }
+        int maximumFlow = 0;
+        for(Edge e : getInEdges(terminus)){
+            maximumFlow += getFlow(e);
+        }
+        System.out.println("\nMaximum Flow in Network :");
+        System.out.println(toDotString());
+        System.out.println("\nMaximum Flow = "+maximumFlow);
     }
 
     /**
