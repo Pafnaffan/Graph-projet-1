@@ -315,9 +315,31 @@ public class FlowNetwork extends Graph {
      * Method that compute the maximum flow in this FlowNetwork by using the Ford-Fulkerson method
      */
     public void fordFulkerson() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Which algorithm would you like to use for the augmenting path? : ");
+        System.out.println("(1) Random Search");
+        System.out.println("(2) Breadth-First-Search");
+        System.out.println("(3) Deep-First-Search");
+        int algo = scanner.nextInt();
         while (true) {
             FlowNetwork residual = computeResidualNetwork();
-            List<Node> path = residual.augmentingPathDFS();
+            System.out.println("Residual Network :");
+            System.out.println(residual.toDotString());
+            List<Node> path = null;
+            if(algo == 1){
+                path = residual.augmentingPathRandom();
+            }
+            else if (algo == 2){
+                path = residual.augmentingPathBFS();
+            }
+            else if (algo == 3){
+                path = residual.augmentingPathDFS();
+            }
+            else {
+                throw new RuntimeException("Invalid selection.");
+            }
+            System.out.println("Augmenting Path :");
+            System.out.println(path);
             if (path.isEmpty()) {
                 break;
             }
@@ -347,6 +369,8 @@ public class FlowNetwork extends Graph {
                     editFlow(backward, flow.get(backward) - bottle);
                 }
             }
+            System.out.println("Flow Induced :");
+            System.out.println(toDotString());
         }
     }
 
