@@ -211,6 +211,14 @@ public class FlowNetwork extends Graph {
         return new ArrayList<>();
     }
 
+    /**
+     * Performs a depth-first search to find a path from the current node to the sink node.
+     * @param current the current node being explored in the DFS traversal
+     * @param sink the target node (sink) to find a path to
+     * @param parent a map that tracks the predecessor of each visited node, used to reconstruct
+     *               the path once the sink is found. The map is updated as nodes are visited.
+     * @return {@code true} if a path from the current node to the sink is found, {@code false} otherwise
+     */
     private boolean dfsSearch(Node current, Node sink, Map<Node, Node> parent){
         if (current.equals(sink)) return true;
         for (Edge e : getOutEdges(current)) {
